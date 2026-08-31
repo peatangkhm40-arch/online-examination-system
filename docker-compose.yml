@@ -1,0 +1,22 @@
+# PostgreSQL สำหรับพัฒนา local — รันด้วย: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: online-exam-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: exam_user
+      POSTGRES_PASSWORD: exam_local_dev
+      POSTGRES_DB: online_exam
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U exam_user -d online_exam"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

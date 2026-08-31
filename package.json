@@ -1,0 +1,13 @@
+{
+  "name": "online-examination-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "เว็บแอปพลิเคชันระบบทดสอบออนไลน์เพื่อการป้องกันการทุจริต",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "start": "node scripts/dev.mjs",
+    "dev:setup": "cd backend && npm run db:local:setup",
+    "status": "node scripts/status.mjs",
+    "stop": "cd backend && npm run db:local:stop"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "เว็บแอปพลิเคชันระบบทดสอบออนไลน์เพื่อการป้องกันการทุจริต",
+    "slug": "online-exam-system",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "onlineexam",
+    "userInterfaceStyle": "light",
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    }
+  }
+}

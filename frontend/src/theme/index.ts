@@ -1,0 +1,192 @@
+import { StyleSheet } from 'react-native';
+
+// โทนแอป + เชลล์แดชบอร์ดสไตล์ Icewall (sidebar มืด / คอนเทนต์ขาว)
+export const colors = {
+  primary: '#6366f1',
+  primaryDark: '#4f46e5',
+  primaryLight: '#818cf8',
+  accent: '#7c3aed',
+  accentBlue: '#3b82f6',
+  link: '#6366f1',
+  linkHover: '#4f46e5',
+  danger: '#ef4444',
+  warning: '#f59e0b',
+  success: '#10b981',
+  background: '#f0f4ff',
+  backgroundSoft: '#eef2ff',
+  surface: '#ffffff',
+  text: '#1e1b4b',
+  textMuted: '#64748b',
+  border: '#e2e8f0',
+  inputBg: '#f8fafc',
+  /** พื้นหลังนอกเชลล์ (รอบการ์ดขาว) */
+  shellBg: '#1e293b',
+  shellBgDeep: '#0f172a',
+  shellSidebar: '#1e293b',
+  shellSidebarActive: 'rgba(99, 102, 241, 0.28)',
+  shellSidebarHover: 'rgba(255, 255, 255, 0.06)',
+  shellTopbar: '#1e293b',
+  shellMuted: '#94a3b8',
+  shellText: '#e2e8f0',
+};
+
+export const gradients = {
+  primary: ['#7c3aed', '#6366f1', '#3b82f6'] as const,
+  primarySoft: ['#ede9fe', '#e0e7ff', '#dbeafe'] as const,
+  hero: ['#6366f1', '#7c3aed'] as const,
+  card: ['#f5f3ff', '#eff6ff'] as const,
+  button: ['#7c3aed', '#6366f1'] as const,
+};
+
+export const fonts = {
+  regular: 'Sarabun_400Regular',
+  medium: 'Sarabun_500Medium',
+  semibold: 'Sarabun_600SemiBold',
+  bold: 'Sarabun_700Bold',
+};
+
+export const commonStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    maxWidth: 800,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.8)',
+    marginBottom: 16,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontFamily: fonts.bold,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
+    marginBottom: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    fontFamily: fonts.regular,
+    backgroundColor: colors.inputBg,
+    color: colors.text,
+  },
+  formRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  formLabel: {
+    width: 120,
+    marginRight: 16,
+    textAlign: 'right',
+    fontSize: 15,
+    fontFamily: fonts.medium,
+    color: colors.text,
+  },
+  requiredMark: {
+    color: colors.danger,
+    fontFamily: fonts.medium,
+  },
+  formField: {
+    flex: 1,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontFamily: fonts.semibold,
+  },
+  buttonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonOutlineText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontFamily: fonts.semibold,
+  },
+  buttonDanger: {
+    backgroundColor: colors.danger,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 8,
+  },
+  error: {
+    color: colors.danger,
+    fontFamily: fonts.regular,
+    marginBottom: 12,
+    fontSize: 14,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: colors.backgroundSoft,
+    marginBottom: 8,
+  },
+  badgeText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontFamily: fonts.semibold,
+  },
+  linkText: {
+    color: colors.link,
+    fontFamily: fonts.semibold,
+  },
+  mutedText: {
+    color: colors.textMuted,
+    fontFamily: fonts.regular,
+  },
+});

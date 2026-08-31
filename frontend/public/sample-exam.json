@@ -1,0 +1,104 @@
+{
+  "questions": [
+    {
+      "questionText": "What is the plural of 'child'?",
+      "points": 1,
+      "options": [
+        { "optionText": "childs", "isCorrect": false },
+        { "optionText": "children", "isCorrect": true },
+        { "optionText": "childes", "isCorrect": false },
+        { "optionText": "childrens", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Choose the correct verb: She ____ to school every day.",
+      "points": 1,
+      "options": [
+        { "optionText": "go", "isCorrect": false },
+        { "optionText": "goes", "isCorrect": true },
+        { "optionText": "going", "isCorrect": false },
+        { "optionText": "gone", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Which word is a noun?",
+      "points": 1,
+      "options": [
+        { "optionText": "quickly", "isCorrect": false },
+        { "optionText": "beautiful", "isCorrect": false },
+        { "optionText": "happiness", "isCorrect": true },
+        { "optionText": "run", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Choose the correct article: I saw ____ elephant at the zoo.",
+      "points": 1,
+      "options": [
+        { "optionText": "a", "isCorrect": false },
+        { "optionText": "an", "isCorrect": true },
+        { "optionText": "the", "isCorrect": false },
+        { "optionText": "no article", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "What is the past tense of 'go'?",
+      "points": 1,
+      "options": [
+        { "optionText": "goed", "isCorrect": false },
+        { "optionText": "went", "isCorrect": true },
+        { "optionText": "gone", "isCorrect": false },
+        { "optionText": "going", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Which sentence is correct?",
+      "points": 1,
+      "options": [
+        { "optionText": "He don't like coffee.", "isCorrect": false },
+        { "optionText": "He doesn't likes coffee.", "isCorrect": false },
+        { "optionText": "He doesn't like coffee.", "isCorrect": true },
+        { "optionText": "He not like coffee.", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Choose the synonym of 'happy'.",
+      "points": 1,
+      "options": [
+        { "optionText": "sad", "isCorrect": false },
+        { "optionText": "angry", "isCorrect": false },
+        { "optionText": "glad", "isCorrect": true },
+        { "optionText": "tired", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Fill in the blank: They ____ playing football now.",
+      "points": 1,
+      "options": [
+        { "optionText": "is", "isCorrect": false },
+        { "optionText": "are", "isCorrect": true },
+        { "optionText": "am", "isCorrect": false },
+        { "optionText": "be", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Which word is an adjective?",
+      "points": 1,
+      "options": [
+        { "optionText": "slowly", "isCorrect": false },
+        { "optionText": "teacher", "isCorrect": false },
+        { "optionText": "beautiful", "isCorrect": true },
+        { "optionText": "write", "isCorrect": false }
+      ]
+    },
+    {
+      "questionText": "Choose the correct comparative form: This book is ____ than that one.",
+      "points": 1,
+      "options": [
+        { "optionText": "more good", "isCorrect": false },
+        { "optionText": "gooder", "isCorrect": false },
+        { "optionText": "better", "isCorrect": true },
+        { "optionText": "best", "isCorrect": false }
+      ]
+    }
+  ]
+}
