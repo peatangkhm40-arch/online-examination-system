@@ -13,6 +13,9 @@ import adminRoutes from './routes/adminRoutes';
 
 const app = express();
 
+// Railway อยู่หลัง reverse proxy — ต้องเปิดก่อน express-rate-limit ไม่งั้นได้ ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(
   cors({
