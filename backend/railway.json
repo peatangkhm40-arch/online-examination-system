@@ -5,7 +5,7 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "npx prisma migrate deploy && npx --yes tsx prisma/seed.ts && npm start",
+    "startCommand": "npx prisma db push --accept-data-loss && npx --yes tsx prisma/seed.ts && npm start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
