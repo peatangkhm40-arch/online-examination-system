@@ -6,6 +6,8 @@ import { colors, fonts } from '@/theme';
 /** กันสี autofill ของเบราว์เซอร์ทำให้ช่องกรอกสีไม่เท่ากัน */
 const inputFieldStyle = {
   flex: 1,
+  minWidth: 0,
+  width: '100%',
   paddingVertical: 13,
   fontSize: 15,
   fontFamily: fonts.regular,
@@ -32,7 +34,7 @@ export function AuthInput({ label, icon, required, style, ...props }: AuthInputP
   const [focused, setFocused] = useState(false);
 
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginBottom: 16, width: '100%', minWidth: 0, flexShrink: 1 }}>
       <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
         {label}
         {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
@@ -41,6 +43,9 @@ export function AuthInput({ label, icon, required, style, ...props }: AuthInputP
         style={{
           flexDirection: 'row',
           alignItems: 'center',
+          width: '100%',
+          minWidth: 0,
+          overflow: 'hidden',
           borderWidth: 1.5,
           borderColor: focused ? colors.primary : colors.border,
           borderRadius: 12,
@@ -81,7 +86,7 @@ export function PasswordInput({ label, required, ...props }: PasswordInputProps)
   const [eyeHovered, setEyeHovered] = useState(false);
 
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginBottom: 16, width: '100%', minWidth: 0 }}>
       <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
         {label}
         {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
@@ -90,6 +95,9 @@ export function PasswordInput({ label, required, ...props }: PasswordInputProps)
         style={{
           flexDirection: 'row',
           alignItems: 'center',
+          width: '100%',
+          minWidth: 0,
+          overflow: 'hidden',
           borderWidth: 1.5,
           borderColor: focused ? colors.primary : colors.border,
           borderRadius: 12,

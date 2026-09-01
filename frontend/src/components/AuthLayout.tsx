@@ -216,6 +216,7 @@ export function AuthCenterLayout({ children }: AuthCenterLayoutProps) {
             maxWidth: 560,
             width: '100%',
             alignSelf: 'center',
+            overflow: 'hidden',
             backgroundColor: colors.surface,
             borderRadius: 24,
             padding: 32,

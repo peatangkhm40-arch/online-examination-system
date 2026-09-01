@@ -172,8 +172,8 @@ export default function RegisterScreen() {
               onChange={(v) => setPrefix(v as TitlePrefix)}
             />
           </View>
-          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
-            <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 12, alignItems: 'stretch', width: '100%' }}>
+            <View style={{ flex: isMobile ? undefined : 1, width: isMobile ? '100%' : undefined, minWidth: 0 }}>
               <AuthInput
                 label="ชื่อ"
                 icon="person-outline"
@@ -183,13 +183,13 @@ export default function RegisterScreen() {
                 onChangeText={setFirstName}
               />
             </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flex: isMobile ? undefined : 1, width: isMobile ? '100%' : undefined, minWidth: 0 }}>
               <AuthInput label="นามสกุล" required placeholder="นามสกุล" value={lastName} onChangeText={setLastName} />
             </View>
           </View>
         </>
       ) : (
-        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginBottom: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', width: '100%', flexWrap: 'wrap' }}>
           <View style={{ width: 120, flexShrink: 0 }}>
             <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
               คำนำหน้า <Text style={{ color: colors.danger }}>*</Text>
@@ -202,7 +202,7 @@ export default function RegisterScreen() {
               onChange={(v) => setPrefix(v as TitlePrefix)}
             />
           </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flex: 1, minWidth: 140, flexBasis: 140 }}>
             <AuthInput
               label="ชื่อ"
               icon="person-outline"
@@ -212,7 +212,7 @@ export default function RegisterScreen() {
               onChangeText={setFirstName}
             />
           </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flex: 1, minWidth: 140, flexBasis: 140 }}>
             <AuthInput label="นามสกุล" required placeholder="นามสกุล" value={lastName} onChangeText={setLastName} />
           </View>
         </View>
