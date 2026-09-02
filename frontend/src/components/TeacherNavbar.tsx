@@ -8,6 +8,8 @@ interface TeacherNavbarProps {
   children: ReactNode;
   title?: string;
   maxContentWidth?: number;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export const TEACHER_MENU: AppShellMenuItem[] = [
@@ -18,7 +20,15 @@ export const TEACHER_MENU: AppShellMenuItem[] = [
   { icon: 'bar-chart-outline', label: 'ข้อมูลรวม/แจ้งเตือน', route: '/(teacher)/summary' },
 ];
 
-export function TeacherNavbar({ user, onLogout, children, title, maxContentWidth = 1200 }: TeacherNavbarProps) {
+export function TeacherNavbar({
+  user,
+  onLogout,
+  children,
+  title,
+  maxContentWidth = 1200,
+  onRefresh,
+  refreshing,
+}: TeacherNavbarProps) {
   return (
     <AppShell
       user={user}
@@ -28,6 +38,8 @@ export function TeacherNavbar({ user, onLogout, children, title, maxContentWidth
       appLabel="อาจารย์"
       title={title}
       maxContentWidth={maxContentWidth}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     >
       {children}
     </AppShell>

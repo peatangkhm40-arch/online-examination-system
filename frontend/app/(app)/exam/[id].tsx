@@ -1,16 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ExamRulesNotice } from '@/components/ExamRulesNotice';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import type { ExamDetail } from '@/types';
-import { colors, commonStyles } from '@/theme';
+import { colors, commonStyles, fonts } from '@/theme';
+
+const rulesNoticeKey = (userId: string) => `exam_rules_notice_v2_${userId}`;
+
+function hasSeenRulesNotice(userId: string) {
+  if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem(rulesNoticeKey(userId)) === '1';
+  }
+  return false;
+}
+
+function markRulesNoticeSeen(userId: string) {
+  if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem(rulesNoticeKey(userId), '1');
+  }
+}
 
 export default function ExamDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
@@ -21,6 +38,8 @@ export default function ExamDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+  const [showRules, setShowRules] = useState(false);
+  const [pendingStart, setPendingStart] = useState(false);
 
   const loadExam = useCallback(async () => {
     if (!id) {
@@ -44,7 +63,7 @@ export default function ExamDetailScreen() {
     loadExam();
   }, [loadExam]);
 
-  const handleStart = async () => {
+  const startExam = async () => {
     if (!id) return;
     setStarting(true);
     setError('');
@@ -53,8 +72,26 @@ export default function ExamDetailScreen() {
       router.replace(`/(app)/take/${attempt.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Cannot start exam');
-    } finally {
       setStarting(false);
+    }
+  };
+
+  const handleStart = async () => {
+    if (!id || !user) return;
+    if (user.role === 'STUDENT' && !hasSeenRulesNotice(user.id)) {
+      setPendingStart(true);
+      setShowRules(true);
+      return;
+    }
+    await startExam();
+  };
+
+  const acceptRules = () => {
+    if (user) markRulesNoticeSeen(user.id);
+    setShowRules(false);
+    if (pendingStart) {
+      setPendingStart(false);
+      void startExam();
     }
   };
 
@@ -69,8 +106,26 @@ export default function ExamDetailScreen() {
   if (!exam) {
     return (
       <View style={commonStyles.content}>
-        <Pressable onPress={() => router.replace('/(app)/dashboard')} style={{ marginTop: 16, marginBottom: 8 }}>
-          <Text style={{ color: colors.primary }}>← กลับหน้าหลัก</Text>
+        <Pressable
+          onPress={() => router.replace('/(app)/dashboard')}
+          accessibilityLabel="กลับหน้าหลัก"
+          style={({ pressed }) => ({
+            alignSelf: 'flex-start',
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: 44,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            marginTop: 16,
+            marginBottom: 12,
+            borderRadius: 12,
+            backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            cursor: 'pointer' as const,
+          })}
+        >
+          <Text style={{ color: colors.primary, fontFamily: fonts.semibold, fontSize: 15 }}>← กลับหน้าหลัก</Text>
         </Pressable>
         <Text style={commonStyles.error}>{error || 'ไม่พบข้อสอบ'}</Text>
         <Text style={{ color: colors.textMuted, marginTop: 8, fontSize: 13 }}>
@@ -82,9 +137,29 @@ export default function ExamDetailScreen() {
 
   return (
     <ScrollView style={commonStyles.container}>
+      <ExamRulesNotice visible={user?.role === 'STUDENT' && showRules} onAccept={acceptRules} />
+
       <View style={commonStyles.content}>
-        <Pressable onPress={() => router.back()} style={{ marginTop: 16, marginBottom: 8 }}>
-          <Text style={{ color: colors.primary }}>← กลับ</Text>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityLabel="ย้อนกลับ"
+          style={({ pressed }) => ({
+            alignSelf: 'flex-start',
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: 44,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            marginTop: 16,
+            marginBottom: 12,
+            borderRadius: 12,
+            backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            cursor: 'pointer' as const,
+          })}
+        >
+          <Text style={{ color: colors.primary, fontFamily: fonts.semibold, fontSize: 15 }}>← ย้อนกลับ</Text>
         </Pressable>
 
         <View style={commonStyles.card}>
@@ -97,6 +172,30 @@ export default function ExamDetailScreen() {
 
           {user?.role === 'STUDENT' ? (
             <>
+              <Pressable
+                onPress={() => {
+                  setPendingStart(false);
+                  setShowRules(true);
+                }}
+                style={({ pressed }) => ({
+                  marginTop: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: colors.primary,
+                  backgroundColor: pressed ? colors.backgroundSoft : colors.backgroundSoft,
+                  cursor: 'pointer' as const,
+                })}
+              >
+                <Text style={{ flex: 1, fontFamily: fonts.semibold, fontSize: 14, color: colors.primary }}>
+                  อ่านกฎการสอบก่อนเริ่มทำ
+                </Text>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.primary }}>กดเข้าไปอ่าน →</Text>
+              </Pressable>
+
               {exam.questions.length === 0 ? (
                 <Text style={[commonStyles.error, { marginTop: 12 }]}>
                   ห้องสอบนี้ยังไม่มีข้อสอบ — รออาจารย์นำเข้าไฟล์คลังข้อสอบก่อน
@@ -106,17 +205,18 @@ export default function ExamDetailScreen() {
               <Pressable
                 style={[
                   commonStyles.button,
+                  { minHeight: 52, marginTop: 16 },
                   (starting || exam.questions.length === 0) && { opacity: 0.5 },
                 ]}
                 onPress={handleStart}
                 disabled={starting || exam.questions.length === 0}
               >
-                <Text style={commonStyles.buttonText}>
+                <Text style={[commonStyles.buttonText, { fontSize: 16 }]}>
                   {starting ? 'กำลังเริ่ม...' : 'เริ่มทำข้อสอบ'}
                 </Text>
               </Pressable>
-              <Text style={{ color: colors.warning, marginTop: 12, fontSize: 13 }}>
-                ⚠️ ระบบจะตรวจจับการสลับแท็บ, คัดลอก/วาง และพฤติกรรมที่น่าสงสัย
+              <Text style={{ color: colors.warning, marginTop: 12, fontSize: 13, lineHeight: 20 }}>
+                ระบบจะตัดสิทธิ์ทันทีหากสลับแอป/แท็บ เปิดแชทลอย หรือออกจากหน้าข้อสอบ
               </Text>
             </>
           ) : (

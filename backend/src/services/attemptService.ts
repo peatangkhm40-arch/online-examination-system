@@ -199,9 +199,9 @@ export async function recordCheatEvent(
 
   const descriptions: Partial<Record<CheatEventType, string>> = {
     TAB_SWITCH: 'นักเรียนสลับแท็บออกจากหน้าข้อสอบ',
-    APP_SWITCH: 'นักเรียนปัดแอปหรือออกจากหน้าจอ',
-    WINDOW_BLUR: 'หน้าต่างข้อสอบเสียโฟกัส',
-    PAGE_HIDDEN: 'หน้าข้อสอบถูกซ่อน (สลับหน้า/แท็บ)',
+    APP_SWITCH: 'นักเรียนปัดแอป เปิดแชทลอย หรือออกจากหน้าจอข้อสอบ',
+    WINDOW_BLUR: 'หน้าต่างข้อสอบเสียโฟกัส (อาจเปิดแชท/แอปอื่นทับ)',
+    PAGE_HIDDEN: 'หน้าข้อสอบถูกซ่อน (สลับหน้า/แท็บ/แอป)',
     FULLSCREEN_EXIT: 'นักเรียนออกจากโหมดเต็มจอ',
     OTHER: 'พบพฤติกรรมที่น่าสงสัย (คัดลอก/วาง หรืออื่น ๆ)',
   };

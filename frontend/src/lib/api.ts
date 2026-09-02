@@ -60,6 +60,20 @@ export const api = {
       auth: false,
     }),
 
+  forgotPassword: (data: {
+    email: string;
+    newPassword: string;
+    confirmPassword: string;
+    gradeLevel?: string;
+    studentNumber?: number;
+    fullName?: string;
+  }) =>
+    apiRequest<{ message: string; role: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: data,
+      auth: false,
+    }),
+
   register: (data: import('../types').RegisterStudentPayload) =>
     apiRequest<{ user: import('../types').User; token: string; message: string }>('/api/auth/register', {
       method: 'POST',

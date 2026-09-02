@@ -348,3 +348,67 @@ export async function updateProfile(
 
   return toTeacherUser(updated);
 }
+
+/**
+ * ลืมรหัสผ่าน — ยืนยันตัวตนแล้วตั้งรหัสใหม่ (ไม่ต้องพึ่งอีเมล SMTP)
+ * - นักเรียน: อีเมล + ระดับชั้น + เลขที่
+ * - อาจารย์/แอดมิน: อีเมล + ชื่อ-นามสกุลตามในระบบ
+ */
+export async function resetPasswordWithIdentity(data: {
+  email: string;
+  newPassword: string;
+  gradeLevel?: string;
+  studentNumber?: number;
+  fullName?: string;
+}) {
+  const email = normalizeEmail(data.email);
+  const newPassword = data.newPassword;
+
+  const student = await prisma.student.findUnique({ where: { email } });
+  if (student?.isActive) {
+    const grade = (data.gradeLevel ?? '').trim();
+    const num = data.studentNumber;
+    if (!grade || num == null || Number.isNaN(num)) {
+      throw new Error('STUDENT_IDENTITY_REQUIRED');
+    }
+    if (student.gradeLevel !== grade || student.studentNumber !== num) {
+      throw new Error('IDENTITY_MISMATCH');
+    }
+    await prisma.student.update({
+      where: { id: student.id },
+      data: { passwordHash: await bcrypt.hash(newPassword, 12) },
+    });
+    return { role: Role.STUDENT as const, message: 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบ' };
+  }
+
+  const teacher = await prisma.teacher.findUnique({ where: { email } });
+  if (teacher?.isActive) {
+    const name = (data.fullName ?? '').trim().replace(/\s+/g, ' ');
+    if (!name) throw new Error('STAFF_IDENTITY_REQUIRED');
+    if (teacher.fullName.trim().replace(/\s+/g, ' ') !== name) {
+      throw new Error('IDENTITY_MISMATCH');
+    }
+    await prisma.teacher.update({
+      where: { id: teacher.id },
+      data: { passwordHash: await bcrypt.hash(newPassword, 12) },
+    });
+    return { role: Role.TEACHER as const, message: 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบ' };
+  }
+
+  const admin = await prisma.admin.findUnique({ where: { email } });
+  if (admin?.isActive) {
+    const name = (data.fullName ?? '').trim().replace(/\s+/g, ' ');
+    if (!name) throw new Error('STAFF_IDENTITY_REQUIRED');
+    if (admin.fullName.trim().replace(/\s+/g, ' ') !== name) {
+      throw new Error('IDENTITY_MISMATCH');
+    }
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { passwordHash: await bcrypt.hash(newPassword, 12) },
+    });
+    return { role: Role.ADMIN as const, message: 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบ' };
+  }
+
+  throw new Error('ACCOUNT_NOT_FOUND');
+}
+

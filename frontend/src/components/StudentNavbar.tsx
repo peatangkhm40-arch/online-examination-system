@@ -14,6 +14,7 @@ interface StudentNavbarProps {
 export const STUDENT_MENU: AppShellMenuItem[] = [
   { icon: 'home-outline', label: 'หน้าหลัก', route: '/(app)/dashboard', section: 'เมนูหลัก' },
   { icon: 'time-outline', label: 'ประวัติการสอบ', route: '/(app)/history', section: 'ผลการเรียน' },
+  { icon: 'shield-checkmark-outline', label: 'กฎการสอบ', route: '/(app)/rules', section: 'ข้อมูลระบบ' },
   { icon: 'help-circle-outline', label: 'ช่วยเหลือ / ติดต่อ', route: '/(app)/help', section: 'ข้อมูลระบบ' },
 ];
 

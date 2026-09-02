@@ -27,6 +27,9 @@ type AppShellProps = {
   children: ReactNode;
   maxContentWidth?: number;
   contentPadding?: number;
+  /** ปุ่มรีเฟรชในท็อปบาร์ (เห็นชัดทุกหน้าจอ) */
+  onRefresh?: () => void;
+  refreshing?: boolean;
 };
 
 function isRouteActive(pathname: string | null, route: string) {
@@ -50,10 +53,12 @@ export function AppShell({
   children,
   maxContentWidth = 1200,
   contentPadding,
+  onRefresh,
+  refreshing = false,
 }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isMobile, contentPadding: responsivePadding } = useResponsiveLayout();
+  const { isMobile, isDesktop, contentPadding: responsivePadding } = useResponsiveLayout();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -246,27 +251,66 @@ export function AppShell({
           ) : null}
 
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.shellMuted }} numberOfLines={1}>
-              {(appLabel || roleLabel) + '  ›  ' + activeTitle}
-            </Text>
-            <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: '#fff', marginTop: 2 }} numberOfLines={1}>
+            {!isMobile ? (
+              <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.shellMuted }} numberOfLines={1}>
+                {(appLabel || roleLabel) + '  ›  ' + activeTitle}
+              </Text>
+            ) : null}
+            <Text
+              style={{
+                fontFamily: fonts.semibold,
+                fontSize: isMobile ? 15 : 15,
+                color: '#fff',
+                marginTop: isMobile ? 0 : 2,
+              }}
+              numberOfLines={1}
+            >
               {activeTitle}
             </Text>
           </View>
 
-          {!isMobile ? (
+          {isDesktop ? (
             <Text
               style={{
                 fontFamily: fonts.regular,
                 fontSize: 11,
                 color: colors.shellMuted,
-                maxWidth: 220,
+                maxWidth: 180,
                 textAlign: 'right',
               }}
               numberOfLines={2}
             >
               {APP_NAME}
             </Text>
+          ) : null}
+
+          {onRefresh ? (
+            <Pressable
+              onPress={onRefresh}
+              disabled={refreshing}
+              accessibilityLabel="รีเฟรช"
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                minHeight: 40,
+                paddingHorizontal: isMobile ? 10 : 14,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: pressed || refreshing ? colors.primaryDark : colors.primary,
+                flexShrink: 0,
+                cursor: refreshing ? ('default' as const) : ('pointer' as const),
+              })}
+            >
+              {refreshing ? (
+                <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: '#fff' }}>...</Text>
+              ) : (
+                <Ionicons name="refresh" size={18} color="#fff" />
+              )}
+              {!isMobile ? (
+                <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: '#fff' }}>รีเฟรช</Text>
+              ) : null}
+            </Pressable>
           ) : null}
 
           <Pressable
@@ -283,7 +327,8 @@ export function AppShell({
               borderWidth: 1,
               borderColor: 'rgba(255,255,255,0.14)',
               cursor: 'pointer' as const,
-              maxWidth: isMobile ? 160 : 220,
+              maxWidth: isMobile ? 120 : 220,
+              flexShrink: 0,
             })}
             accessibilityLabel="โปรไฟล์ผู้ใช้"
           >

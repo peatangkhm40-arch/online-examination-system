@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TeacherNavbar } from '@/components/TeacherNavbar';
 import { useAuth } from '@/context/AuthContext';
@@ -64,6 +65,13 @@ export default function TeacherStudentListScreen() {
     void load(1, classroomId);
   };
 
+  const handleRefresh = () => {
+    void (async () => {
+      await loadClassrooms();
+      await load(page, selectedClassroomId);
+    })();
+  };
+
   const handleLogout = async () => {
     await logout();
     router.replace('/(auth)/login');
@@ -78,60 +86,114 @@ export default function TeacherStudentListScreen() {
       : `ทุกห้องเรียนของฉัน · ${total} คน`;
 
   return (
-    <TeacherNavbar user={user} onLogout={handleLogout} title="รายชื่อผู้เข้าสอบ" maxContentWidth={1200}>
-        <View style={{ marginBottom: 16 }}>
+    <TeacherNavbar
+      user={user}
+      onLogout={handleLogout}
+      title="รายชื่อผู้เข้าสอบ"
+      maxContentWidth={1200}
+      onRefresh={handleRefresh}
+      refreshing={loading}
+    >
+        <View style={{ marginBottom: 8 }}>
           <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.text }}>รายชื่อผู้เข้าสอบ</Text>
           <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 4 }}>
             {headerCountLabel}
           </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          <Pressable
-            onPress={() => selectClassroom('')}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              borderWidth: 1.5,
-              borderColor: selectedClassroomId === '' ? colors.primary : colors.border,
-              backgroundColor: selectedClassroomId === '' ? colors.backgroundSoft : colors.surface,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fonts.medium,
-                fontSize: 13,
-                color: selectedClassroomId === '' ? colors.primary : colors.textMuted,
-              }}
-            >
-              ทุกห้องเรียน ({allRoomsCount} คน)
-            </Text>
-          </Pressable>
-          {classrooms.map((c) => (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
             <Pressable
-              key={c.id}
-              onPress={() => selectClassroom(c.id)}
+              onPress={() => selectClassroom('')}
               style={{
                 paddingHorizontal: 14,
                 paddingVertical: 8,
                 borderRadius: 999,
                 borderWidth: 1.5,
-                borderColor: selectedClassroomId === c.id ? colors.primary : colors.border,
-                backgroundColor: selectedClassroomId === c.id ? colors.backgroundSoft : colors.surface,
+                borderColor: selectedClassroomId === '' ? colors.primary : colors.border,
+                backgroundColor: selectedClassroomId === '' ? colors.backgroundSoft : colors.surface,
               }}
             >
               <Text
                 style={{
                   fontFamily: fonts.medium,
                   fontSize: 13,
-                  color: selectedClassroomId === c.id ? colors.primary : colors.textMuted,
+                  color: selectedClassroomId === '' ? colors.primary : colors.textMuted,
                 }}
               >
-                {c.name} ({c.studentCount} คน)
+                ทุกห้องเรียน ({allRoomsCount} คน)
               </Text>
             </Pressable>
-          ))}
+            {classrooms.map((c) => (
+              <Pressable
+                key={c.id}
+                onPress={() => selectClassroom(c.id)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  borderWidth: 1.5,
+                  borderColor: selectedClassroomId === c.id ? colors.primary : colors.border,
+                  backgroundColor: selectedClassroomId === c.id ? colors.backgroundSoft : colors.surface,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.medium,
+                    fontSize: 13,
+                    color: selectedClassroomId === c.id ? colors.primary : colors.textMuted,
+                  }}
+                >
+                  {c.name} ({c.studentCount} คน)
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Pressable
+            onPress={handleRefresh}
+            disabled={loading}
+            accessibilityLabel="รีเฟรชรายชื่อ"
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              minHeight: 44,
+              minWidth: 120,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 12,
+              backgroundColor: pressed || loading ? colors.primaryDark : colors.primary,
+              opacity: loading ? 0.85 : 1,
+              flexShrink: 0,
+              alignSelf: 'center',
+              cursor: loading ? ('default' as const) : ('pointer' as const),
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 3,
+            })}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="refresh" size={18} color="#fff" />
+            )}
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: '#fff' }}>
+              {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+            </Text>
+          </Pressable>
         </View>
 
         <View

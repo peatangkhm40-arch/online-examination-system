@@ -113,13 +113,14 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 12 }}>
         <Pressable
           style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
             opacity: pressed ? 0.85 : 1,
             cursor: 'pointer' as const,
+            flexShrink: 1,
           })}
           onPress={() => setRememberMe((v) => !v)}
         >
@@ -140,6 +141,18 @@ export default function LoginScreen() {
           </View>
           <Text style={{ fontSize: 13, fontFamily: fonts.regular, color: colors.textMuted }}>จดจำฉัน</Text>
         </Pressable>
+
+        <Link href="/(auth)/forgot-password" asChild>
+          <Pressable
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.8 : 1,
+              cursor: 'pointer' as const,
+              paddingVertical: 4,
+            })}
+          >
+            <Text style={{ fontSize: 13, fontFamily: fonts.semibold, color: colors.link }}>ลืมรหัสผ่าน?</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <GradientButton label="เข้าสู่ระบบ" icon="arrow-forward" onPress={handleLogin} loading={submitting} disabled={submitting} />

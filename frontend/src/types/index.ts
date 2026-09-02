@@ -248,7 +248,9 @@ export interface StudentAttemptItem {
 
 export type CheatEventType =
   | 'TAB_SWITCH'
+  | 'APP_SWITCH'
   | 'WINDOW_BLUR'
+  | 'PAGE_HIDDEN'
   | 'COPY_ATTEMPT'
   | 'PASTE_ATTEMPT'
   | 'FULLSCREEN_EXIT'

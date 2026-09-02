@@ -39,7 +39,12 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)/login" />
         <Stack.Screen name="(auth)/register" />
+        <Stack.Screen name="(auth)/forgot-password" />
         <Stack.Screen name="(app)/dashboard" />
+        <Stack.Screen name="(app)/history" />
+        <Stack.Screen name="(app)/help" />
+        <Stack.Screen name="(app)/rules" />
+        <Stack.Screen name="(app)/profile" />
         <Stack.Screen name="(app)/exam/[id]" />
         <Stack.Screen name="(app)/take/[attemptId]" />
         <Stack.Screen name="(app)/result/[attemptId]" />

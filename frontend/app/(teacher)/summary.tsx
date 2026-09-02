@@ -31,6 +31,7 @@ export default function TeacherSummaryScreen() {
   const [downloadMsg, setDownloadMsg] = useState('');
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const [data, { results: examResults }] = await Promise.all([
         api.getTeacherSummary(),
@@ -80,29 +81,96 @@ export default function TeacherSummaryScreen() {
   if (!user) return null;
 
   return (
-    <TeacherNavbar user={user} onLogout={handleLogout} title="ข้อมูลรวม/แจ้งเตือน" maxContentWidth={1200}>
-        <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.text, marginBottom: 4 }}>ข้อมูลรวมและการแจ้งเตือน</Text>
-        <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginBottom: 20 }}>
-          นักเรียนที่ลงทะเบียน {totalStudents} คน · เหตุการณ์ทุจริต {totalCheatEvents} ครั้ง
-        </Text>
+    <TeacherNavbar
+      user={user}
+      onLogout={handleLogout}
+      title="ข้อมูลรวม/แจ้งเตือน"
+      maxContentWidth={1200}
+      onRefresh={() => void load()}
+      refreshing={loading}
+    >
+        <View style={{ marginBottom: 8 }}>
+          <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.text, marginBottom: 4 }}>
+            ข้อมูลรวมและการแจ้งเตือน
+          </Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted }}>
+            นักเรียนที่ลงทะเบียน {totalStudents} คน · เหตุการณ์ทุจริต {totalCheatEvents} ครั้ง
+          </Text>
+        </View>
 
-        {loading ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 10,
+            marginBottom: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Pressable
+            onPress={() => void load()}
+            disabled={loading}
+            accessibilityLabel="รีเฟรชการแจ้งเตือน"
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              minHeight: 44,
+              minWidth: 120,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 12,
+              backgroundColor: pressed || loading ? colors.primaryDark : colors.primary,
+              opacity: loading ? 0.85 : 1,
+              flexShrink: 0,
+              cursor: loading ? ('default' as const) : ('pointer' as const),
+            })}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="refresh" size={18} color="#fff" />
+            )}
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: '#fff' }}>
+              {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => handleDownloadCsv()}
+            disabled={downloading || loading}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              minHeight: 44,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderColor: colors.primary,
+              backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
+              opacity: downloading ? 0.6 : 1,
+              flexShrink: 0,
+              cursor: downloading ? ('default' as const) : ('pointer' as const),
+            })}
+          >
+            <Ionicons name="download-outline" size={16} color={colors.primary} />
+            <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: colors.primary }}>
+              {downloading ? 'กำลังดาวน์โหลด...' : 'ดาวน์โหลดรายงานทั้งหมด (CSV)'}
+            </Text>
+          </Pressable>
+        </View>
+
+        {loading && cheatAlerts.length === 0 && students.length === 0 ? (
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
         ) : (
           <>
-            {/* รายงานคะแนนรายห้องสอบ + ดาวน์โหลด CSV */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            {/* รายงานคะแนนรายห้องสอบ */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
               <Text style={{ fontFamily: fonts.bold, fontSize: 17, color: colors.text }}>รายงานคะแนนรายห้องสอบ</Text>
-              <Pressable
-                onPress={() => handleDownloadCsv()}
-                disabled={downloading}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.primary, opacity: downloading ? 0.6 : 1 }}
-              >
-                <Ionicons name="download-outline" size={15} color="#fff" />
-                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: '#fff' }}>
-                  {downloading ? 'กำลังดาวน์โหลด...' : 'ดาวน์โหลดรายงานทั้งหมด (CSV)'}
-                </Text>
-              </Pressable>
             </View>
             {downloadMsg ? (
               <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.success, marginBottom: 10 }}>{downloadMsg}</Text>

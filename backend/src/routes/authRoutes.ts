@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { asyncHandler, validateBody } from '../middleware/validate';
 import { authenticate, isStudentRole } from '../middleware/auth';
 import { PASSWORD_REGEX, PASSWORD_RULES_MESSAGE } from '../constants/auth';
-import { getMe, loginUser, registerStudent, updateProfile } from '../services/authService';
+import { getMe, loginUser, registerStudent, resetPasswordWithIdentity, updateProfile } from '../services/authService';
 import { joinByCode } from '../services/studentService';
 
 const router = Router();
@@ -31,6 +31,23 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+const forgotPasswordSchema = z
+  .object({
+    email: z.string().trim().email('รูปแบบอีเมลไม่ถูกต้อง'),
+    newPassword: z
+      .string()
+      .min(8, PASSWORD_RULES_MESSAGE)
+      .regex(PASSWORD_REGEX, PASSWORD_RULES_MESSAGE),
+    confirmPassword: z.string().min(1, 'กรุณายืนยันรหัสผ่าน'),
+    gradeLevel: z.string().trim().optional(),
+    studentNumber: z.number().int().min(1).max(99).optional(),
+    fullName: z.string().trim().optional(),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: 'รหัสผ่านใหม่ไม่ตรงกัน',
+    path: ['confirmPassword'],
+  });
 
 const updateProfileSchema = z
   .object({
@@ -91,6 +108,44 @@ router.post(
       if (error instanceof Error && error.message === 'INVALID_CREDENTIALS') {
         res.status(401).json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
         return;
+      }
+      throw error;
+    }
+  })
+);
+
+/** ลืมรหัสผ่าน — ยืนยันตัวตนแล้วตั้งรหัสใหม่ */
+router.post(
+  '/forgot-password',
+  validateBody(forgotPasswordSchema),
+  asyncHandler(async (req, res) => {
+    try {
+      const result = await resetPasswordWithIdentity({
+        email: req.body.email,
+        newPassword: req.body.newPassword,
+        gradeLevel: req.body.gradeLevel,
+        studentNumber: req.body.studentNumber,
+        fullName: req.body.fullName,
+      });
+      res.json(result);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'ACCOUNT_NOT_FOUND') {
+          res.status(404).json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้' });
+          return;
+        }
+        if (error.message === 'STUDENT_IDENTITY_REQUIRED') {
+          res.status(400).json({ error: 'บัญชีนักเรียนต้องกรอกระดับชั้นและเลขที่เพื่อยืนยันตัวตน' });
+          return;
+        }
+        if (error.message === 'STAFF_IDENTITY_REQUIRED') {
+          res.status(400).json({ error: 'บัญชีอาจารย์/แอดมินต้องกรอกชื่อ-นามสกุลตามในระบบ' });
+          return;
+        }
+        if (error.message === 'IDENTITY_MISMATCH') {
+          res.status(403).json({ error: 'ข้อมูลยืนยันตัวตนไม่ตรงกับบัญชี กรุณาตรวจสอบอีกครั้ง' });
+          return;
+        }
       }
       throw error;
     }

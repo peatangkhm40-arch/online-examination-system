@@ -3,6 +3,7 @@ import { prisma } from '../db/prisma';
 import { getMe } from './authService';
 import { Role } from '../types/roles';
 import { getStudentExamAccessKeys, studentCanAccessExamGrade } from './studentAccess';
+import { normalizeThaiPersonName } from '../utils/thaiText';
 
 /**
  * นักเรียนกรอกรหัสเข้าห้องเรียน (joinCode) → ผูกห้องเรียน โดยไม่ทับระดับชั้นตอนสมัคร
@@ -46,7 +47,7 @@ export async function joinByCode(studentId: string, rawCode: string) {
         id: classroom.id,
         name: classroom.name,
         joinCode: classroom.joinCode,
-        teacherName: classroom.teacher.fullName,
+        teacherName: normalizeThaiPersonName(classroom.teacher.fullName),
       },
       user,
     };

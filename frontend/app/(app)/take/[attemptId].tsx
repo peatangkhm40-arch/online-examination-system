@@ -256,14 +256,17 @@ export default function TakeExamScreen() {
               onPress={() => {
                 if (attemptId) router.replace(`/(app)/result/${attemptId}`);
               }}
-              style={{
-                backgroundColor: colors.danger,
-                borderRadius: 12,
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#b91c1c' : colors.danger,
+                borderRadius: 14,
+                minHeight: 52,
                 paddingVertical: 14,
                 alignItems: 'center',
-              }}
+                justifyContent: 'center',
+                cursor: 'pointer' as const,
+              })}
             >
-              <Text style={{ fontFamily: fonts.bold, color: '#fff', fontSize: 15 }}>ดูผลการสอบ</Text>
+              <Text style={{ fontFamily: fonts.bold, color: '#fff', fontSize: 16 }}>ดูผลการสอบ</Text>
             </Pressable>
           </View>
         </View>

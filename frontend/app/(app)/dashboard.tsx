@@ -20,9 +20,16 @@ import { api } from '@/lib/api';
 import type { Exam } from '@/types';
 import { colors, fonts, gradients } from '@/theme';
 import { isTeacher } from '@/utils/routing';
+import { formatInClassroomMessage, formatTeacherLabel, normalizeThaiPersonName } from '@/utils/thaiText';
 
-const rulesNoticeKey = (userId: string) => `exam_rules_notice_${userId}`;
+const rulesNoticeKey = (userId: string) => `exam_rules_notice_v2_${userId}`;
 const waitingRoomKey = (userId: string) => `waiting_classroom_${userId}`;
+
+type WaitingRoom = {
+  name: string;
+  joinCode: string;
+  teacherName: string;
+};
 
 function hasSeenRulesNotice(userId: string) {
   if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') {
@@ -39,7 +46,13 @@ function markRulesNoticeSeen(userId: string) {
 
 function saveWaitingRoom(userId: string, info: WaitingRoom) {
   if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem(waitingRoomKey(userId), JSON.stringify(info));
+    sessionStorage.setItem(
+      waitingRoomKey(userId),
+      JSON.stringify({
+        ...info,
+        teacherName: normalizeThaiPersonName(info.teacherName),
+      })
+    );
   }
 }
 
@@ -47,19 +60,18 @@ function loadWaitingRoom(userId: string): WaitingRoom | null {
   if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') {
     try {
       const raw = sessionStorage.getItem(waitingRoomKey(userId));
-      return raw ? (JSON.parse(raw) as WaitingRoom) : null;
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as WaitingRoom;
+      return {
+        ...parsed,
+        teacherName: normalizeThaiPersonName(parsed.teacherName || ''),
+      };
     } catch {
       return null;
     }
   }
   return null;
 }
-
-type WaitingRoom = {
-  name: string;
-  joinCode: string;
-  teacherName: string;
-};
 
 export default function DashboardScreen() {
   const { user, loading: authLoading, logout, setUserState, refreshUser } = useAuth();
@@ -130,7 +142,7 @@ export default function DashboardScreen() {
       }
     });
 
-    if (!hasSeenRulesNotice(user.id)) {
+    if (user.role === 'STUDENT' && !hasSeenRulesNotice(user.id)) {
       setShowRulesNotice(true);
     }
   }, [user, authLoading, router, loadExams]);
@@ -275,7 +287,10 @@ export default function DashboardScreen() {
           </Text>
         </View>
       ) : null}
-      <ExamRulesNotice visible={showRulesNotice && !showWaitingModal} onAccept={acceptRulesNotice} />
+      <ExamRulesNotice
+        visible={user.role === 'STUDENT' && showRulesNotice && !showWaitingModal}
+        onAccept={acceptRulesNotice}
+      />
 
       {/* เด้งขึ้นหลังเข้าห้องเรียน — รอเข้าสอบ */}
       <Modal visible={showWaitingModal} transparent animationType="fade" onRequestClose={() => setShowWaitingModal(false)}>
@@ -313,7 +328,7 @@ export default function DashboardScreen() {
               {waitingRoom?.name}
             </Text>
             <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 6 }}>
-              อาจารย์ {waitingRoom?.teacherName}
+              {formatTeacherLabel(waitingRoom?.teacherName ?? '')}
               {waitingRoom?.joinCode ? ` · รหัส ${waitingRoom.joinCode}` : ''}
             </Text>
 
@@ -343,9 +358,10 @@ export default function DashboardScreen() {
                 borderRadius: 12,
                 paddingVertical: 14,
                 alignItems: 'center',
+                cursor: 'pointer' as const,
               })}
             >
-              <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: '#fff' }}>รอในห้องเรียน</Text>
+              <Text style={{ fontFamily: fonts.semibold, fontSize: 15, color: '#fff' }}>รับทราบ</Text>
             </Pressable>
           </View>
         </View>
@@ -624,7 +640,7 @@ export default function DashboardScreen() {
               {user.isCollegeVerified === false
                 ? 'คนที่เพิ่งลงทะเบียนจะยังไม่เห็นห้องสอบ\nรอแอดมินยืนยัน แล้วเข้าห้องเรียนด้วยรหัสจากอาจารย์ก่อน'
                 : inWaitingRoom
-                  ? `คุณอยู่ในห้อง ${waitingName} แล้ว\nรออาจารย์เปิดห้องสอบ — ระบบจะเด้งแจ้งเมื่อพร้อม`
+                  ? `${formatInClassroomMessage(waitingName)}\nรออาจารย์เปิดห้องสอบ — ระบบจะเด้งแจ้งเมื่อพร้อม`
                   : 'กรอกรหัสเข้าห้องเรียนด้านบนก่อน แล้วรออาจารย์เปิดห้องสอบ'}
             </Text>
           </View>

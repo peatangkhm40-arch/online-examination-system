@@ -3,6 +3,7 @@ import { TitlePrefix } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { PASSWORD_REGEX } from '../constants/auth';
 import { normalizeEmail, validateStaffEmail, validateStudentEmail } from '../utils/emailPolicy';
+import { normalizeThaiPersonName } from '../utils/thaiText';
 
 export type TeacherAccount = {
   id: string;
@@ -63,7 +64,7 @@ function mapTeacher(t: {
   return {
     id: t.id,
     email: t.email,
-    fullName: t.fullName,
+    fullName: normalizeThaiPersonName(t.fullName),
     isActive: t.isActive,
     createdAt: t.createdAt.toISOString(),
   };
@@ -101,7 +102,7 @@ export async function createTeacherAccount(data: {
   fullName: string;
 }) {
   const email = normalizeEmail(data.email);
-  const fullName = data.fullName.trim();
+  const fullName = normalizeThaiPersonName(data.fullName);
   const emailCheck = validateStaffEmail(email);
   if (!emailCheck.ok) throw new Error(`EMAIL_INVALID:${emailCheck.error}`);
 
@@ -149,7 +150,7 @@ export async function updateTeacherAccount(
   const teacher = await prisma.teacher.update({
     where: { id: teacherId },
     data: {
-      ...(data.fullName !== undefined ? { fullName: data.fullName.trim() } : {}),
+      ...(data.fullName !== undefined ? { fullName: normalizeThaiPersonName(data.fullName) } : {}),
       ...(email ? { email } : {}),
       ...(data.password ? { passwordHash: await bcrypt.hash(data.password, 12) } : {}),
       ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
@@ -301,7 +302,7 @@ export async function listAllExams() {
       classCode: r.classCode,
       gradeLevel: r.gradeLevel,
       status: r.roomStatus === 'OPEN' ? 'PUBLISHED' : 'DRAFT',
-      teacherName: r.teacher.fullName,
+      teacherName: normalizeThaiPersonName(r.teacher.fullName),
       questionCount: r._count.questions,
       createdAt: r.createdAt.toISOString(),
     })
@@ -322,7 +323,7 @@ export async function listAllClassrooms() {
       id: r.id,
       name: r.name,
       joinCode: r.joinCode,
-      teacherName: r.teacher.fullName,
+      teacherName: normalizeThaiPersonName(r.teacher.fullName),
       studentCount: r._count.students,
       createdAt: r.createdAt.toISOString(),
     })
