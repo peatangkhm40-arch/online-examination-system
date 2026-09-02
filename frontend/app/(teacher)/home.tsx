@@ -48,50 +48,11 @@ export default function TeacherHomeScreen() {
       onLogout={handleLogout}
       title="หน้าหลัก"
       maxContentWidth={1200}
-      onRefresh={() => void load()}
-      refreshing={loading}
     >
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 12,
-            marginBottom: 24,
-          }}
-        >
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted }}>แผงควบคุมอาจารย์</Text>
-            <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.text, marginTop: 4 }}>{user.fullName}</Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, marginTop: 4 }}>{user.email}</Text>
-          </View>
-          <Pressable
-            onPress={() => void load()}
-            disabled={loading}
-            accessibilityLabel="รีเฟรชหน้าหลัก"
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              minHeight: 40,
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: pressed ? colors.primary : colors.border,
-              backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? ('default' as const) : ('pointer' as const),
-            })}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Ionicons name="refresh-outline" size={18} color={colors.primary} />
-            )}
-            <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.primary }}>รีเฟรช</Text>
-          </Pressable>
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted }}>แผงควบคุมอาจารย์</Text>
+          <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.text, marginTop: 4 }}>{user.fullName}</Text>
+          <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, marginTop: 4 }}>{user.email}</Text>
         </View>
 
         {loading && !stats ? (

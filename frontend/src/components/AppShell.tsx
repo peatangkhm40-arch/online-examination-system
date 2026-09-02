@@ -27,9 +27,6 @@ type AppShellProps = {
   children: ReactNode;
   maxContentWidth?: number;
   contentPadding?: number;
-  /** ปุ่มรีเฟรชในท็อปบาร์ (เห็นชัดทุกหน้าจอ) */
-  onRefresh?: () => void;
-  refreshing?: boolean;
 };
 
 function isRouteActive(pathname: string | null, route: string) {
@@ -53,8 +50,6 @@ export function AppShell({
   children,
   maxContentWidth = 1200,
   contentPadding,
-  onRefresh,
-  refreshing = false,
 }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -282,35 +277,6 @@ export function AppShell({
             >
               {APP_NAME}
             </Text>
-          ) : null}
-
-          {onRefresh ? (
-            <Pressable
-              onPress={onRefresh}
-              disabled={refreshing}
-              accessibilityLabel="รีเฟรช"
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                minHeight: 40,
-                paddingHorizontal: isMobile ? 10 : 14,
-                paddingVertical: 8,
-                borderRadius: 10,
-                backgroundColor: pressed || refreshing ? colors.primaryDark : colors.primary,
-                flexShrink: 0,
-                cursor: refreshing ? ('default' as const) : ('pointer' as const),
-              })}
-            >
-              {refreshing ? (
-                <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: '#fff' }}>...</Text>
-              ) : (
-                <Ionicons name="refresh" size={18} color="#fff" />
-              )}
-              {!isMobile ? (
-                <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: '#fff' }}>รีเฟรช</Text>
-              ) : null}
-            </Pressable>
           ) : null}
 
           <Pressable

@@ -91,8 +91,6 @@ export default function TeacherStudentListScreen() {
       onLogout={handleLogout}
       title="รายชื่อผู้เข้าสอบ"
       maxContentWidth={1200}
-      onRefresh={handleRefresh}
-      refreshing={loading}
     >
         <View style={{ marginBottom: 8 }}>
           <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.text }}>รายชื่อผู้เข้าสอบ</Text>

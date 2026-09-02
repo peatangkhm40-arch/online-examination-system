@@ -8,8 +8,6 @@ interface TeacherNavbarProps {
   children: ReactNode;
   title?: string;
   maxContentWidth?: number;
-  onRefresh?: () => void;
-  refreshing?: boolean;
 }
 
 export const TEACHER_MENU: AppShellMenuItem[] = [
@@ -26,8 +24,6 @@ export function TeacherNavbar({
   children,
   title,
   maxContentWidth = 1200,
-  onRefresh,
-  refreshing,
 }: TeacherNavbarProps) {
   return (
     <AppShell
@@ -38,8 +34,6 @@ export function TeacherNavbar({
       appLabel="อาจารย์"
       title={title}
       maxContentWidth={maxContentWidth}
-      onRefresh={onRefresh}
-      refreshing={refreshing}
     >
       {children}
     </AppShell>

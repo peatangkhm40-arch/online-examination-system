@@ -86,8 +86,6 @@ export default function TeacherSummaryScreen() {
       onLogout={handleLogout}
       title="ข้อมูลรวม/แจ้งเตือน"
       maxContentWidth={1200}
-      onRefresh={() => void load()}
-      refreshing={loading}
     >
         <View style={{ marginBottom: 8 }}>
           <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: colors.text, marginBottom: 4 }}>
