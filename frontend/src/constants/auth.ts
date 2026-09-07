@@ -20,6 +20,6 @@ export const DEMO_ACCOUNTS = {
   },
   admin: {
     email: 'admin@college.ac.th',
-    password: 'Admin@2026',
+    password: 'Admin#K9mP2xQ7',
   },
 } as const;

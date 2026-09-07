@@ -28,7 +28,7 @@ const DISPOSABLE_EMAIL_DOMAINS = new Set([
 export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const STUDENT_EMAIL_FORMAT_ERROR =
-  'กรุณากรอกรูปแบบอีเมลให้ถูกต้องเพื่อใช้สำหรับรับรหัส OTP';
+  'กรุณากรอกอีเมลจริงที่ใช้งานได้ (ไม่รับอีเมลชั่วคราว)';
 
 export function normalizeEmail(email: string) {
   return email
@@ -84,6 +84,6 @@ export function validateStaffEmail(email: string): EmailValidationResult {
 }
 
 export const STUDENT_EMAIL_HINT =
-  'กรอกอีเมลจริงที่ใช้งานได้จริงของตนเอง เพื่อใช้รับรหัส OTP สำหรับยืนยันตัวตน หลังจากสมัครแอดมินจะยืนยันว่าเป็นนักเรียนวิทยาลัย';
+  'ใช้อีเมลจริงของตนเองสำหรับเข้าสู่ระบบ หากใช้อีเมลโดเมนวิทยาลัยจะพร้อมใช้งานทันที อีเมลส่วนตัวต้องรอแอดมินยืนยันว่าเป็นนักเรียนวิทยาลัยก่อนเข้าสอบ';
 
 export const STAFF_EMAIL_HINT = `ใช้อีเมลโดเมนวิทยาลัยของตนเอง เช่น somchai@${COLLEGE_EMAIL_DOMAINS[0]} หรือ nicha2549@${COLLEGE_EMAIL_DOMAINS[0]}`;

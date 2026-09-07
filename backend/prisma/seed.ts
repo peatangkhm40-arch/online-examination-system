@@ -12,7 +12,7 @@ const DEMO_STUDENT_PASSWORD = 'Student@2026';
 const DEMO_TEACHER_EMAIL = 'kanya.teacher@college.ac.th';
 const DEMO_TEACHER_PASSWORD = 'Teacher@2026';
 const DEMO_ADMIN_EMAIL = 'admin@college.ac.th';
-const DEMO_ADMIN_PASSWORD = 'Admin@2026';
+const DEMO_ADMIN_PASSWORD = 'Admin#K9mP2xQ7';
 
 async function main() {
   const studentPasswordHash = await bcrypt.hash(DEMO_STUDENT_PASSWORD, 12);

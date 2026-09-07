@@ -17,7 +17,7 @@ const registerSchema = z.object({
     .string()
     .trim()
     .refine((v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v.toLowerCase()), {
-      message: 'กรุณากรอกรูปแบบอีเมลให้ถูกต้องเพื่อใช้สำหรับรับรหัส OTP',
+      message: 'กรุณากรอกอีเมลจริงที่ใช้งานได้ (ไม่รับอีเมลชั่วคราว)',
     }),
   password: z
     .string()

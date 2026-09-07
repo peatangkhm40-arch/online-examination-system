@@ -77,7 +77,7 @@ export default function RegisterScreen() {
     // เมื่ออีเมลผ่าน regex แล้ว ให้ซ่อนกล่องแดงทันที
     if (validateStudentEmail(value) === null) {
       setError((prev) =>
-        prev === STUDENT_EMAIL_FORMAT_ERROR || prev === 'กรุณากรอกอีเมล' || prev.includes('OTP') ? '' : prev
+        prev === STUDENT_EMAIL_FORMAT_ERROR || prev === 'กรุณากรอกอีเมล' ? '' : prev
       );
     }
   };
@@ -94,7 +94,7 @@ export default function RegisterScreen() {
 
     setSubmitting(true);
     try {
-      await register({
+      const registered = await register({
         prefix,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -103,7 +103,11 @@ export default function RegisterScreen() {
         gradeLevel,
         studentNumber: Number(studentNumber),
       });
-      setSuccess('ลงทะเบียนสำเร็จ! กำลังเข้าสู่ระบบ...');
+      setSuccess(
+        registered.isCollegeVerified
+          ? 'ลงทะเบียนสำเร็จ! อีเมลวิทยาลัยพร้อมใช้งาน — กำลังเข้าสู่ระบบ...'
+          : 'ลงทะเบียนสำเร็จ! ใช้อีเมลนี้เข้าสู่ระบบได้ รอแอดมินยืนยันก่อนเข้าสอบ...'
+      );
       // รอ useEffect นำทางเมื่อ user พร้อม — กันฟอร์มกระพริบ
     } catch (e) {
       setError(e instanceof Error ? e.message : 'ไม่สามารถลงทะเบียนได้ กรุณาลองใหม่');
