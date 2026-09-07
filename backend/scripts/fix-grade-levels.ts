@@ -10,7 +10,7 @@ const STANDARD = new Set(
   ['ปวช.', 'ปวส.']
     .flatMap((prefix) =>
       (prefix === 'ปวช.' ? [1, 2, 3] : [1, 2]).flatMap((year) =>
-        [1, 2, 3, 4, 5].map((room) => `${prefix} ${year}/${room}`)
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => `${prefix} ${year}/${room}`)
       )
     )
 );

@@ -4,7 +4,7 @@ const YEARS = [
   { prefix: 'ปวส.', years: [1, 2] },
 ] as const;
 
-const ROOMS = [1, 2, 3, 4, 5];
+const ROOMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export const GRADE_LEVEL_OPTIONS = YEARS.flatMap(({ prefix, years }) =>
   years.flatMap((year) =>
