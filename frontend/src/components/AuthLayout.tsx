@@ -1,5 +1,5 @@
-import { type ReactNode, useEffect } from 'react';
-import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { type ReactNode } from 'react';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/Logo';
 import { APP_NAME, APP_TAGLINE } from '@/constants/app';
@@ -177,35 +177,8 @@ interface AuthCenterLayoutProps {
 }
 
 export function AuthCenterLayout({ children }: AuthCenterLayoutProps) {
-  const { height } = useWindowDimensions();
-
-  useEffect(() => {
-    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.overflow;
-    const prevBody = body.style.overflow;
-    const prevOverscroll = body.style.overscrollBehavior;
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-    body.style.overscrollBehavior = 'none';
-    return () => {
-      html.style.overflow = prevHtml;
-      body.style.overflow = prevBody;
-      body.style.overscrollBehavior = prevOverscroll;
-    };
-  }, []);
-
   return (
-    <View
-      style={{
-        flex: 1,
-        height,
-        maxHeight: height,
-        backgroundColor: colors.shellBg,
-        overflow: 'hidden',
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.shellBg }}>
       <View
         style={{
           position: 'absolute',
@@ -229,17 +202,8 @@ export function AuthCenterLayout({ children }: AuthCenterLayoutProps) {
         }}
       />
 
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: 24,
-          paddingVertical: 20,
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-        }}
-      >
-        <View style={{ alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, paddingVertical: 40 }}>
+        <View style={{ alignItems: 'center', marginBottom: 18 }}>
           <Logo size="md" variant="light" />
           <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: '#fff', marginTop: 12 }}>ExamGuard</Text>
           <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.shellMuted, marginTop: 4 }}>
@@ -251,11 +215,11 @@ export function AuthCenterLayout({ children }: AuthCenterLayoutProps) {
           style={{
             maxWidth: 560,
             width: '100%',
-            flexShrink: 1,
-            maxHeight: '100%',
+            alignSelf: 'center',
             overflow: 'hidden',
             backgroundColor: colors.surface,
             borderRadius: 24,
+            padding: 32,
             borderWidth: 1,
             borderColor: 'rgba(255,255,255,0.06)',
             shadowColor: '#020617',
@@ -265,17 +229,9 @@ export function AuthCenterLayout({ children }: AuthCenterLayoutProps) {
             elevation: 8,
           }}
         >
-          <ScrollView
-            style={{ flexGrow: 0 }}
-            contentContainerStyle={{ padding: 32 }}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-          >
-            {children}
-          </ScrollView>
+          {children}
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
