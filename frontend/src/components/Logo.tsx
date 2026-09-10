@@ -1,8 +1,8 @@
-import { View, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Image, View, Text } from 'react-native';
 import { APP_NAME } from '@/constants/app';
-import { colors, fonts, gradients } from '@/theme';
+import { colors, fonts } from '@/theme';
+
+const LOGO_SOURCE = require('../../assets/logo.png');
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -31,22 +31,23 @@ export function Logo({ size = 'md', variant = 'dark', showText = true }: LogoPro
           height: box,
           borderRadius: box * 0.28,
           overflow: 'hidden',
-          shadowColor: '#7c3aed',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#fff',
+          shadowColor: '#0f172a',
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
+          shadowOpacity: 0.18,
           shadowRadius: 8,
           elevation: 4,
           flexShrink: 0,
         }}
       >
-        <LinearGradient
-          colors={[...gradients.button]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Ionicons name="shield-checkmark" size={box * 0.46} color="#fff" />
-        </LinearGradient>
+        <Image
+          source={LOGO_SOURCE}
+          resizeMode="contain"
+          accessibilityLabel={APP_NAME}
+          style={{ width: box * 0.82, height: box * 0.82 }}
+        />
       </View>
       {showText ? (
         <View style={{ flex: 1, maxWidth: textStyle.maxWidth }}>
