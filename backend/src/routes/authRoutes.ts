@@ -3,7 +3,12 @@ import { TitlePrefix } from '@prisma/client';
 import { z } from 'zod';
 import { asyncHandler, validateBody } from '../middleware/validate';
 import { authenticate, isStudentRole } from '../middleware/auth';
-import { PASSWORD_REGEX, PASSWORD_RULES_MESSAGE } from '../constants/auth';
+import {
+  PASSWORD_EMAIL_MESSAGE,
+  PASSWORD_REGEX,
+  PASSWORD_RULES_MESSAGE,
+  passwordContainsEmail,
+} from '../constants/auth';
 import { getMe, loginUser, registerStudent, resetPasswordWithIdentity, updateProfile } from '../services/authService';
 import { joinByCode } from '../services/studentService';
 
@@ -25,6 +30,9 @@ const registerSchema = z.object({
     .regex(PASSWORD_REGEX, PASSWORD_RULES_MESSAGE),
   gradeLevel: z.string().trim().min(1, 'กรุณาเลือกระดับชั้น'),
   studentNumber: z.number().int().min(1).max(99),
+}).refine((d) => !passwordContainsEmail(d.password, d.email), {
+  message: PASSWORD_EMAIL_MESSAGE,
+  path: ['password'],
 });
 
 const loginSchema = z.object({
@@ -47,6 +55,10 @@ const forgotPasswordSchema = z
   .refine((d) => d.newPassword === d.confirmPassword, {
     message: 'รหัสผ่านใหม่ไม่ตรงกัน',
     path: ['confirmPassword'],
+  })
+  .refine((d) => !passwordContainsEmail(d.newPassword, d.email), {
+    message: PASSWORD_EMAIL_MESSAGE,
+    path: ['newPassword'],
   });
 
 const updateProfileSchema = z

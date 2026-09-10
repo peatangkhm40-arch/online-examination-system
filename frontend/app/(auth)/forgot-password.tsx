@@ -4,6 +4,7 @@ import { Link, useRouter } from 'expo-router';
 import { AuthCenterLayout } from '@/components/AuthLayout';
 import { AuthInput, PasswordInput } from '@/components/AuthInput';
 import { GradientButton } from '@/components/GradientButton';
+import { PasswordRules } from '@/components/PasswordRules';
 import { SelectField } from '@/components/SelectField';
 import { isValidPassword, PASSWORD_RULES_MESSAGE } from '@/constants/auth';
 import { GRADE_LEVEL_OPTIONS } from '@/constants/gradeLevels';
@@ -46,7 +47,7 @@ export default function ForgotPasswordScreen() {
       setError('กรุณากรอกชื่อ-นามสกุลตามในระบบ');
       return;
     }
-    if (!isValidPassword(newPassword)) {
+    if (!isValidPassword(newPassword, email)) {
       setError(PASSWORD_RULES_MESSAGE);
       return;
     }
@@ -159,10 +160,8 @@ export default function ForgotPasswordScreen() {
       )}
 
       <PasswordInput label="รหัสผ่านใหม่" required value={newPassword} onChangeText={setNewPassword} />
+      <PasswordRules password={newPassword} email={email} />
       <PasswordInput label="ยืนยันรหัสผ่านใหม่" required value={confirmPassword} onChangeText={setConfirmPassword} />
-      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>
-        {PASSWORD_RULES_MESSAGE}
-      </Text>
 
       <GradientButton label="ตั้งรหัสผ่านใหม่" icon="key-outline" onPress={handleSubmit} loading={submitting} disabled={submitting || !!success} />
 

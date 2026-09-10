@@ -4,8 +4,9 @@ import { Link, useRouter } from 'expo-router';
 import { AuthCenterLayout } from '@/components/AuthLayout';
 import { AuthInput, PasswordInput } from '@/components/AuthInput';
 import { GradientButton, OutlineButton } from '@/components/GradientButton';
+import { PasswordRules } from '@/components/PasswordRules';
 import { SelectField } from '@/components/SelectField';
-import { isValidPassword, PASSWORD_RULES_MESSAGE } from '@/constants/auth';
+import { isValidPassword, PASSWORD_RULES, PASSWORD_RULES_MESSAGE } from '@/constants/auth';
 import { YEAR_OPTIONS, ROOM_OPTIONS, buildGradeLevel } from '@/constants/gradeLevels';
 import { useAuth } from '@/context/AuthContext';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
@@ -26,11 +27,13 @@ const STUDENT_NUMBER_OPTIONS = Array.from({ length: 40 }, (_, i) => {
   return { label: num, value: num };
 });
 
-function getPasswordStrength(pw: string): { label: string; color: string; width: string } {
+function getPasswordStrength(pw: string, email: string): { label: string; color: string; width: string } {
   if (!pw) return { label: '', color: colors.border, width: '0%' };
-  if (pw.length < 6) return { label: 'อ่อน', color: colors.danger, width: '35%' };
-  if (pw.length < 8) return { label: 'พอใช้', color: colors.warning, width: '70%' };
-  return { label: 'แข็งแรง', color: colors.success, width: '100%' };
+  const passed = PASSWORD_RULES.filter((rule) => rule.test(pw, email)).length;
+  const width = `${Math.round((passed / PASSWORD_RULES.length) * 100)}%`;
+  if (passed <= 1) return { label: 'อ่อน', color: colors.danger, width };
+  if (passed < PASSWORD_RULES.length) return { label: 'พอใช้', color: colors.warning, width };
+  return { label: 'แข็งแรง', color: colors.success, width };
 }
 
 export default function RegisterScreen() {
@@ -54,7 +57,7 @@ export default function RegisterScreen() {
 
   const gradeLevel = yearLevel && roomNumber ? buildGradeLevel(yearLevel, roomNumber) : '';
 
-  const strength = getPasswordStrength(password);
+  const strength = getPasswordStrength(password, email);
 
   useEffect(() => {
     if (loading || !user || redirectedRef.current) return;
@@ -71,7 +74,7 @@ export default function RegisterScreen() {
     if (!yearLevel) return 'กรุณาเลือกระดับชั้น';
     if (!roomNumber) return 'กรุณาเลือกห้อง (1–10)';
     if (!studentNumber) return 'กรุณาเลือกเลขที่';
-    if (!isValidPassword(password)) return PASSWORD_RULES_MESSAGE;
+    if (!isValidPassword(password, email)) return PASSWORD_RULES_MESSAGE;
     if (password !== confirmPassword) return 'รหัสผ่านไม่ตรงกัน กรุณากรอกใหม่อีกครั้ง';
     return null;
   };
@@ -295,10 +298,8 @@ export default function RegisterScreen() {
         </View>
       </View>
 
-      <PasswordInput label="รหัสผ่าน" required placeholder="ตั้งรหัสผ่านอย่างน้อย 6 ตัว" value={password} onChangeText={setPassword} />
-      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: -8, marginBottom: 8 }}>
-        {PASSWORD_RULES_MESSAGE}
-      </Text>
+      <PasswordInput label="รหัสผ่านใหม่" required placeholder="ตั้งรหัสผ่าน" value={password} onChangeText={setPassword} />
+      <PasswordRules password={password} email={email} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
           <View style={{ height: '100%', width: strength.width as `${number}%`, backgroundColor: strength.color, borderRadius: 2 }} />
@@ -309,7 +310,7 @@ export default function RegisterScreen() {
       </View>
 
       <PasswordInput
-        label="ยืนยันรหัสผ่าน"
+        label="ยืนยันรหัสผ่านใหม่"
         required
         placeholder="กรอกรหัสผ่านอีกครั้ง"
         value={confirmPassword}

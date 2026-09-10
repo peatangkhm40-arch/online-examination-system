@@ -129,7 +129,7 @@ export default function AdminHomeScreen() {
       setError(staffEmailError);
       return;
     }
-    if (!isValidPassword(password)) {
+    if (!isValidPassword(password, mail)) {
       setError(PASSWORD_RULES_MESSAGE);
       return;
     }
@@ -156,7 +156,7 @@ export default function AdminHomeScreen() {
         email: editTeacherEmail.trim().toLowerCase(),
       };
       if (editTeacherPassword) {
-        if (!isValidPassword(editTeacherPassword)) {
+        if (!isValidPassword(editTeacherPassword, payload.email)) {
           setError(PASSWORD_RULES_MESSAGE);
           return;
         }
@@ -207,7 +207,7 @@ export default function AdminHomeScreen() {
         studentNumber: Number(editStudentNumber),
       };
       if (editStudentPassword) {
-        if (!isValidPassword(editStudentPassword)) {
+        if (!isValidPassword(editStudentPassword, payload.email)) {
           setError(PASSWORD_RULES_MESSAGE);
           return;
         }
