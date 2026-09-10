@@ -3,11 +3,15 @@ import { prisma } from '../db/prisma';
 import { getMe } from './authService';
 import { Role } from '../types/roles';
 import { getStudentExamAccessKeys, studentCanAccessExamGrade } from './studentAccess';
+import { gradesMatch } from '../utils/gradeMatch';
 import { normalizeThaiPersonName } from '../utils/thaiText';
 
 /**
- * นักเรียนกรอกรหัสเข้าห้องเรียน (joinCode) → ผูกห้องเรียน โดยไม่ทับระดับชั้นตอนสมัคร
- * หรือกรอกรหัสห้องสอบ (classCode) → คืน examId เพื่อเปิดหน้าข้อสอบ
+ * นักเรียนกรอกรหัสเข้าห้องเรียน (joinCode)
+ * - ต้องยืนยันวิทยาลัยแล้ว
+ * - ระดับชั้นตอนสมัครต้องตรงกับระดับชั้นของห้องเรียน
+ * - อยู่ได้หลายห้อง (หลายวิชา)
+ * หรือกรอกรหัสห้องสอบ (classCode) → คืน examId
  */
 export async function joinByCode(studentId: string, rawCode: string) {
   const code = rawCode.trim().toUpperCase();
@@ -28,12 +32,27 @@ export async function joinByCode(studentId: string, rawCode: string) {
       id: true,
       name: true,
       joinCode: true,
+      gradeLevel: true,
+      subject: { select: { name: true } },
       teacher: { select: { fullName: true } },
     },
   });
 
   if (classroom) {
-    // ผูกห้องเรียนอย่างเดียว — ไม่แก้ gradeLevel ที่ลงทะเบียนไว้
+    // ข้อ 4: ชั้นตรง = เข้าได้ / ชั้นไม่ตรง = เข้าไม่ได้
+    if (!gradesMatch(student.gradeLevel, classroom.gradeLevel)) {
+      throw new Error('GRADE_MISMATCH');
+    }
+
+    await prisma.studentClassroom.upsert({
+      where: {
+        studentId_classroomId: { studentId, classroomId: classroom.id },
+      },
+      create: { studentId, classroomId: classroom.id },
+      update: {},
+    });
+
+    // อัปเดตห้องล่าสุด (backward-compat กับ UI เดิม)
     await prisma.student.update({
       where: { id: studentId },
       data: { joinedClassroomId: classroom.id },
@@ -47,6 +66,8 @@ export async function joinByCode(studentId: string, rawCode: string) {
         id: classroom.id,
         name: classroom.name,
         joinCode: classroom.joinCode,
+        gradeLevel: classroom.gradeLevel,
+        subjectName: classroom.subject?.name ?? null,
         teacherName: normalizeThaiPersonName(classroom.teacher.fullName),
       },
       user,
@@ -70,8 +91,15 @@ export async function joinByCode(studentId: string, rawCode: string) {
     }
 
     const access = await getStudentExamAccessKeys(studentId);
+    if (access.keys.length === 0) {
+      throw new Error('JOIN_CLASSROOM_FIRST');
+    }
     if (!studentCanAccessExamGrade(examRoom.gradeLevel, access.keys)) {
       throw new Error('EXAM_WRONG_CLASS');
+    }
+    // ชั้นสมัครต้องตรงกับเป้าหมายห้องสอบ (ถ้ามี)
+    if (examRoom.gradeLevel && !gradesMatch(student.gradeLevel, examRoom.gradeLevel)) {
+      throw new Error('GRADE_MISMATCH');
     }
 
     const user = await getMe(studentId, Role.STUDENT);

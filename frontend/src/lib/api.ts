@@ -31,11 +31,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    throw new Error(
+      'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต หรือรอระบบกลับมาใช้งาน (Railway)'
+    );
+  }
 
   const data = await response.json().catch(() => ({}));
 
@@ -122,7 +129,14 @@ export const api = {
   listMyClassrooms: () =>
     apiRequest<{ classrooms: import('../types').TeacherClassroom[] }>('/api/teachers/classrooms'),
 
-  addClassroom: (data: { name: string; joinCode?: string; useRandomCode?: boolean }) =>
+  addClassroom: (data: {
+    subjectId?: string;
+    subjectName?: string;
+    gradeLevel: string;
+    joinCode?: string;
+    useRandomCode?: boolean;
+    name?: string;
+  }) =>
     apiRequest<{ classroom: import('../types').TeacherClassroom }>('/api/teachers/classrooms', {
       method: 'POST',
       body: data,

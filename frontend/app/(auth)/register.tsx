@@ -6,7 +6,7 @@ import { AuthInput, PasswordInput } from '@/components/AuthInput';
 import { GradientButton, OutlineButton } from '@/components/GradientButton';
 import { SelectField } from '@/components/SelectField';
 import { isValidPassword, PASSWORD_RULES_MESSAGE } from '@/constants/auth';
-import { GRADE_LEVEL_OPTIONS } from '@/constants/gradeLevels';
+import { YEAR_OPTIONS, ROOM_OPTIONS, buildGradeLevel } from '@/constants/gradeLevels';
 import { useAuth } from '@/context/AuthContext';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useSubmitOnEnter } from '@/hooks/useSubmitOnEnter';
@@ -28,8 +28,8 @@ const STUDENT_NUMBER_OPTIONS = Array.from({ length: 40 }, (_, i) => {
 
 function getPasswordStrength(pw: string): { label: string; color: string; width: string } {
   if (!pw) return { label: '', color: colors.border, width: '0%' };
-  if (pw.length < 6) return { label: 'อ่อน', color: colors.danger, width: '25%' };
-  if (!isValidPassword(pw)) return { label: 'ปานกลาง', color: colors.warning, width: '55%' };
+  if (pw.length < 6) return { label: 'อ่อน', color: colors.danger, width: '35%' };
+  if (pw.length < 8) return { label: 'พอใช้', color: colors.warning, width: '70%' };
   return { label: 'แข็งแรง', color: colors.success, width: '100%' };
 }
 
@@ -40,7 +40,8 @@ export default function RegisterScreen() {
   const redirectedRef = useRef(false);
 
   const [prefix, setPrefix] = useState<TitlePrefix>('MR');
-  const [gradeLevel, setGradeLevel] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
+  const [roomNumber, setRoomNumber] = useState('');
   const [studentNumber, setStudentNumber] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -50,6 +51,8 @@ export default function RegisterScreen() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const gradeLevel = yearLevel && roomNumber ? buildGradeLevel(yearLevel, roomNumber) : '';
 
   const strength = getPasswordStrength(password);
 
@@ -65,7 +68,8 @@ export default function RegisterScreen() {
     if (emailError) return emailError;
     if (!firstName.trim()) return 'กรุณากรอกชื่อ';
     if (!lastName.trim()) return 'กรุณากรอกนามสกุล';
-    if (!gradeLevel) return 'กรุณาเลือกระดับชั้น';
+    if (!yearLevel) return 'กรุณาเลือกระดับชั้น';
+    if (!roomNumber) return 'กรุณาเลือกห้อง (1–10)';
     if (!studentNumber) return 'กรุณาเลือกเลขที่';
     if (!isValidPassword(password)) return PASSWORD_RULES_MESSAGE;
     if (password !== confirmPassword) return 'รหัสผ่านไม่ตรงกัน กรุณากรอกใหม่อีกครั้ง';
@@ -113,7 +117,7 @@ export default function RegisterScreen() {
       setError(e instanceof Error ? e.message : 'ไม่สามารถลงทะเบียนได้ กรุณาลองใหม่');
       setSubmitting(false);
     }
-  }, [prefix, firstName, lastName, email, password, confirmPassword, gradeLevel, studentNumber, register]);
+  }, [prefix, firstName, lastName, email, password, confirmPassword, yearLevel, roomNumber, gradeLevel, studentNumber, register]);
 
   useSubmitOnEnter(handleRegister, !submitting && !success && !user);
 
@@ -222,43 +226,87 @@ export default function RegisterScreen() {
         </View>
       )}
 
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
-          ระดับชั้น <Text style={{ color: colors.danger }}>*</Text>
-        </Text>
-        <SelectField
-          hideLabel
-          label="ระดับชั้น"
-          value={gradeLevel}
-          options={GRADE_LEVEL_OPTIONS}
-          onChange={setGradeLevel}
-          placeholder="เลือกระดับชั้น"
-        />
-      </View>
-
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
-          เลขที่ <Text style={{ color: colors.danger }}>*</Text>
-        </Text>
-        <SelectField
-          hideLabel
-          label="เลขที่"
-          value={studentNumber}
-          options={STUDENT_NUMBER_OPTIONS}
-          onChange={setStudentNumber}
-          placeholder="เลือก"
-        />
-      </View>
-
-      <PasswordInput label="รหัสผ่าน" required placeholder="อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข" value={password} onChangeText={setPassword} />
-      {password.length > 0 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -8, marginBottom: 12 }}>
-          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
-            <View style={{ height: '100%', width: strength.width as `${number}%`, backgroundColor: strength.color, borderRadius: 2 }} />
-          </View>
-          <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: strength.color }}>{strength.label}</Text>
+      <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 12, marginBottom: 16 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
+            ระดับชั้น <Text style={{ color: colors.danger }}>*</Text>
+          </Text>
+          <SelectField
+            hideLabel
+            label="ระดับชั้น"
+            value={yearLevel}
+            options={YEAR_OPTIONS}
+            onChange={setYearLevel}
+            placeholder="เช่น ปวช. 1"
+          />
         </View>
-      ) : null}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
+            เลขที่ <Text style={{ color: colors.danger }}>*</Text>
+          </Text>
+          <SelectField
+            hideLabel
+            label="เลขที่"
+            value={studentNumber}
+            options={STUDENT_NUMBER_OPTIONS}
+            onChange={setStudentNumber}
+            placeholder="เลือก"
+          />
+        </View>
+      </View>
+
+      <View style={{ marginBottom: 16 }}>
+        <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text, marginBottom: 8 }}>
+          ห้อง <Text style={{ color: colors.danger }}>*</Text>
+          <Text style={{ fontFamily: fonts.regular, color: colors.textMuted }}> (สูงสุด 10 ห้อง)</Text>
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {ROOM_OPTIONS.map((room) => {
+            const selected = roomNumber === room.value;
+            return (
+              <Pressable
+                key={room.value}
+                onPress={() => setRoomNumber(room.value)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 40,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.backgroundSoft : colors.inputBg,
+                  opacity: pressed ? 0.85 : 1,
+                  cursor: 'pointer' as const,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.semibold,
+                    fontSize: 14,
+                    color: selected ? colors.primary : colors.text,
+                  }}
+                >
+                  {room.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <PasswordInput label="รหัสผ่าน" required placeholder="ตั้งรหัสผ่านอย่างน้อย 6 ตัว" value={password} onChangeText={setPassword} />
+      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: -8, marginBottom: 8 }}>
+        {PASSWORD_RULES_MESSAGE}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
+          <View style={{ height: '100%', width: strength.width as `${number}%`, backgroundColor: strength.color, borderRadius: 2 }} />
+        </View>
+        <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: strength.color }}>
+          {password.length > 0 ? strength.label : 'เงื่อนไขรหัสผ่าน'}
+        </Text>
+      </View>
 
       <PasswordInput
         label="ยืนยันรหัสผ่าน"

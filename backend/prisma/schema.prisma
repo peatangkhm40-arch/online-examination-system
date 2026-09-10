@@ -59,7 +59,7 @@ model Student {
   /// ระดับชั้นตอนลงทะเบียน เช่น "ปวส. 2/4" — ไม่ถูกทับเมื่อเข้าห้องเรียนด้วยรหัส
   gradeLevel        String      @map("grade_level")
   studentNumber     Int         @map("student_number")
-  /// ห้องเรียนที่เข้าด้วยรหัสจากอาจารย์ (แยกจากระดับชั้นตอนสมัคร)
+  /// ห้องเรียนล่าสุดที่เข้าด้วยรหัส (รองรับ backward-compat; รายการเต็มอยู่ที่ memberships)
   joinedClassroomId String?     @map("joined_classroom_id")
   isActive          Boolean     @default(true) @map("is_active")
   /// แอดมินยืนยันแล้วว่าเป็นนักเรียนวิทยาลัยจริง
@@ -67,13 +67,29 @@ model Student {
   createdAt         DateTime    @default(now()) @map("created_at")
   updatedAt         DateTime    @updatedAt @map("updated_at")
 
-  joinedClassroom TeacherClassroom? @relation(fields: [joinedClassroomId], references: [id], onDelete: SetNull)
+  joinedClassroom TeacherClassroom?  @relation("StudentPrimaryClassroom", fields: [joinedClassroomId], references: [id], onDelete: SetNull)
+  memberships     StudentClassroom[]
   cheatLogs       CheatLog[]
   attempts        ExamAttempt[]
 
   // เลขที่ต้องไม่ซ้ำภายในระดับชั้นเดียวกัน
   @@unique([gradeLevel, studentNumber])
   @@map("students")
+}
+
+/// นักเรียนอยู่ได้หลายห้องเรียน (หลายวิชา)
+model StudentClassroom {
+  id          String   @id @default(cuid())
+  studentId   String   @map("student_id")
+  classroomId String   @map("classroom_id")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  student   Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom TeacherClassroom  @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classroomId])
+  @@index([classroomId])
+  @@map("student_classrooms")
 }
 
 /// ตารางแอดมิน — สร้างบัญชีอาจารย์และดูแลระบบ
@@ -91,13 +107,15 @@ model Admin {
 
 /// ตารางอาจารย์ — บัญชีที่ Admin สร้างไว้ล่วงหน้าเพื่อเข้าใช้งานระบบ
 model Teacher {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  fullName     String   @map("full_name")
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  fullName       String   @map("full_name")
+  isActive       Boolean  @default(true) @map("is_active")
+  /// LINE Notify token ของอาจารย์ (แจ้งเตือนเมื่อพบการทุจริต)
+  lineNotifyToken String? @map("line_notify_token")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   examRooms   ExamRoom[]
   subjects    TeacherSubject[]
@@ -106,33 +124,41 @@ model Teacher {
   @@map("teachers")
 }
 
-/// ตารางห้องเรียนที่อาจารย์ดูแล — แยกจากการสร้างห้องสอบ
+/// ตารางห้องเรียนที่อาจารย์ดูแล — แยกตามวิชา + ระดับชั้น/ห้อง
 model TeacherClassroom {
   id        String   @id @default(cuid())
   teacherId String   @map("teacher_id")
-  /// ชื่อห้องเรียน เช่น "ปวส. 2/4"
+  /// วิชาของห้องเรียนนี้
+  subjectId String?  @map("subject_id")
+  /// ระดับชั้น/ห้องที่เปิดสอน เช่น "ปวส. 2/4"
+  gradeLevel String  @map("grade_level")
+  /// ชื่อแสดงผล เช่น "คณิตศาสตร์ · ปวส. 2/4"
   name      String
   /// รหัสเข้าห้องเรียนที่แจกให้นักเรียน เช่น CLASS2A4F
   joinCode  String   @unique @map("join_code")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  teacher   Teacher    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  students  Student[]
-  examRooms ExamRoom[]
+  teacher      Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject      TeacherSubject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  students     Student[]          @relation("StudentPrimaryClassroom")
+  memberships  StudentClassroom[]
+  examRooms    ExamRoom[]
 
   @@unique([teacherId, name])
+  @@index([teacherId, gradeLevel])
   @@map("teacher_classrooms")
 }
 
-/// ตารางวิชาที่อาจารย์แต่ละคนสอน — ใช้เป็นตัวเลือกตอนสร้างห้องสอบ
+/// ตารางวิชาที่อาจารย์แต่ละคนสอน — ใช้เป็นตัวเลือกตอนสร้างห้องเรียน/ห้องสอบ
 model TeacherSubject {
   id        String   @id @default(cuid())
   teacherId String   @map("teacher_id")
   name      String
   createdAt DateTime @default(now()) @map("created_at")
 
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher     Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classrooms  TeacherClassroom[]
 
   // วิชาต้องไม่ซ้ำภายในอาจารย์คนเดียวกัน
   @@unique([teacherId, name])

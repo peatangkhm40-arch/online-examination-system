@@ -55,30 +55,27 @@ async function loadTeacherClassrooms(teacherId: string, classroomId?: string) {
   return classrooms;
 }
 
-/** ดึงนักเรียนในห้องของอาจารย์ — เข้าด้วยรหัส หรือระดับชั้นตรงชื่อห้อง */
+/** ดึงนักเรียนในห้องของอาจารย์ — จาก membership หรือห้องล่าสุด */
 async function findStudentsInClassrooms(
   classrooms: { id: string; name: string }[]
 ) {
   if (classrooms.length === 0) return [];
 
   const classroomIds = classrooms.map((c) => c.id);
-  const gradeVariants = [...new Set(classrooms.flatMap((c) => gradeNameVariants(c.name)))];
-  const classroomByGradeKey = new Map(
-    classrooms.flatMap((c) => gradeNameVariants(c.name).map((v) => [normalizeGradeKey(v), c] as const))
-  );
+  const classroomById = new Map(classrooms.map((c) => [c.id, c]));
 
-  const [joined, byGrade] = await Promise.all([
-    prisma.student.findMany({
-      where: { isActive: true, joinedClassroomId: { in: classroomIds } },
-      include: { joinedClassroom: { select: { id: true, name: true } } },
-      orderBy: [{ gradeLevel: 'asc' }, { studentNumber: 'asc' }],
+  const [members, primaryJoined] = await Promise.all([
+    prisma.studentClassroom.findMany({
+      where: { classroomId: { in: classroomIds } },
+      include: {
+        student: {
+          include: { joinedClassroom: { select: { id: true, name: true } } },
+        },
+        classroom: { select: { id: true, name: true } },
+      },
     }),
     prisma.student.findMany({
-      where: {
-        isActive: true,
-        joinedClassroomId: null,
-        gradeLevel: { in: gradeVariants },
-      },
+      where: { isActive: true, joinedClassroomId: { in: classroomIds } },
       include: { joinedClassroom: { select: { id: true, name: true } } },
       orderBy: [{ gradeLevel: 'asc' }, { studentNumber: 'asc' }],
     }),
@@ -86,13 +83,14 @@ async function findStudentsInClassrooms(
 
   const byId = new Map<string, ReturnType<typeof mapStudent>>();
 
-  for (const s of joined) {
-    byId.set(s.id, mapStudent(s));
+  for (const m of members) {
+    if (!m.student.isActive) continue;
+    byId.set(m.student.id, mapStudent(m.student, m.classroom.name));
   }
-  for (const s of byGrade) {
+  for (const s of primaryJoined) {
     if (byId.has(s.id)) continue;
-    const match = classroomByGradeKey.get(normalizeGradeKey(s.gradeLevel));
-    byId.set(s.id, mapStudent(s, match?.name ?? null));
+    const room = s.joinedClassroomId ? classroomById.get(s.joinedClassroomId) : null;
+    byId.set(s.id, mapStudent(s, room?.name ?? null));
   }
 
   return [...byId.values()].sort((a, b) => {

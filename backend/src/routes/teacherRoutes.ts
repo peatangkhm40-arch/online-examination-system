@@ -116,7 +116,15 @@ router.get(
     const classrooms = await prisma.teacherClassroom.findMany({
       where: { teacherId: req.user!.userId },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true, joinCode: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        joinCode: true,
+        gradeLevel: true,
+        subjectId: true,
+        subject: { select: { id: true, name: true } },
+        createdAt: true,
+      },
     });
 
     const withCounts = await Promise.all(
@@ -124,6 +132,9 @@ router.get(
         id: c.id,
         name: c.name,
         joinCode: c.joinCode,
+        gradeLevel: c.gradeLevel,
+        subjectId: c.subjectId,
+        subjectName: c.subject?.name ?? null,
         studentCount: await countStudentsInClassroom(c),
         createdAt: c.createdAt.toISOString(),
       }))
@@ -137,19 +148,54 @@ router.post(
   '/classrooms',
   validateBody(
     z.object({
-      name: z.string().min(2).max(50),
+      subjectId: z.string().min(1).optional(),
+      subjectName: z.string().min(1).max(80).optional(),
+      gradeLevel: z.string().min(2).max(50),
       joinCode: z.string().min(3).max(20).optional(),
       useRandomCode: z.boolean().optional(),
+      /** legacy */
+      name: z.string().min(2).max(80).optional(),
     })
   ),
   asyncHandler(async (req, res) => {
     const { prisma } = await import('../db/prisma');
-    const name = String(req.body.name).trim();
+    const teacherId = req.user!.userId;
+    const gradeLevel = String(req.body.gradeLevel || req.body.name || '').trim();
+    if (gradeLevel.length < 2) {
+      res.status(400).json({ error: 'กรุณาเลือกระดับชั้น/ห้อง' });
+      return;
+    }
+
+    let subjectId: string | null = req.body.subjectId ? String(req.body.subjectId) : null;
+    let subjectName = req.body.subjectName ? String(req.body.subjectName).trim() : '';
+
+    if (subjectId) {
+      const subject = await prisma.teacherSubject.findFirst({
+        where: { id: subjectId, teacherId },
+      });
+      if (!subject) {
+        res.status(404).json({ error: 'ไม่พบวิชานี้' });
+        return;
+      }
+      subjectName = subject.name;
+    } else if (subjectName) {
+      const subject = await prisma.teacherSubject.upsert({
+        where: { teacherId_name: { teacherId, name: subjectName } },
+        create: { teacherId, name: subjectName },
+        update: {},
+      });
+      subjectId = subject.id;
+    } else {
+      res.status(400).json({ error: 'กรุณาเลือกหรือระบุประเภทวิชาของห้องเรียน' });
+      return;
+    }
+
+    const displayName = `${subjectName} · ${gradeLevel}`;
     const existing = await prisma.teacherClassroom.findUnique({
-      where: { teacherId_name: { teacherId: req.user!.userId, name } },
+      where: { teacherId_name: { teacherId, name: displayName } },
     });
     if (existing) {
-      res.status(409).json({ error: 'มีห้องเรียนนี้อยู่แล้ว' });
+      res.status(409).json({ error: 'มีห้องเรียนวิชานี้สำหรับชั้นนี้อยู่แล้ว' });
       return;
     }
 
@@ -159,18 +205,32 @@ router.post(
         req.body.useRandomCode === false && req.body.joinCode ? req.body.joinCode : undefined
       );
       const classroom = await prisma.teacherClassroom.create({
-        data: { teacherId: req.user!.userId, name, joinCode },
-        select: { id: true, name: true, joinCode: true, createdAt: true },
-      });
-      const studentCount = await prisma.student.count({
-        where: { isActive: true, gradeLevel: name },
+        data: {
+          teacherId,
+          subjectId,
+          gradeLevel,
+          name: displayName,
+          joinCode,
+        },
+        select: {
+          id: true,
+          name: true,
+          joinCode: true,
+          gradeLevel: true,
+          subjectId: true,
+          subject: { select: { name: true } },
+          createdAt: true,
+        },
       });
       res.status(201).json({
         classroom: {
           id: classroom.id,
           name: classroom.name,
           joinCode: classroom.joinCode,
-          studentCount,
+          gradeLevel: classroom.gradeLevel,
+          subjectId: classroom.subjectId,
+          subjectName: classroom.subject?.name ?? subjectName,
+          studentCount: 0,
           createdAt: classroom.createdAt.toISOString(),
         },
       });

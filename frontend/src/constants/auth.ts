@@ -1,8 +1,7 @@
 /** กฎรหัสผ่านมาตรฐาน — ใช้ร่วมกันทั้งหน้า Register และ Backend */
-export const PASSWORD_RULES_MESSAGE =
-  'รหัสผ่านต้องมีอย่างน้อย 8 ตัว ประกอบด้วยตัวอักษรและตัวเลข';
+export const PASSWORD_RULES_MESSAGE = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
 
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+export const PASSWORD_REGEX = /^.{6,}$/;
 
 export function isValidPassword(password: string): boolean {
   return PASSWORD_REGEX.test(password);

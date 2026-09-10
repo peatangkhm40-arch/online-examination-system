@@ -10,7 +10,7 @@ import type { Exam, TeacherClassroom, TeacherSubject } from '@/types';
 import { colors, fonts } from '@/theme';
 import { fileToBase64 } from '@/utils/fileToBase64';
 
-const EXAM_FILE_ACCEPT = '.xlsx,.xls,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel';
+const EXAM_FILE_ACCEPT = '.csv,.xlsx,.xls,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel';
 
 export default function TeacherManageExamScreen() {
   const { user, logout } = useAuth();
@@ -49,8 +49,8 @@ export default function TeacherManageExamScreen() {
   const onExamFileSelected = (file?: File | null) => {
     if (!file) return;
     const lower = file.name.toLowerCase();
-    if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls') && !lower.endsWith('.json')) {
-      setError('กรุณาเลือกไฟล์ .xlsx, .xls หรือ .json เท่านั้น');
+    if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls') && !lower.endsWith('.json') && !lower.endsWith('.csv')) {
+      setError('กรุณาเลือกไฟล์ .csv, .xlsx, .xls หรือ .json เท่านั้น');
       return;
     }
     setError('');
@@ -73,8 +73,8 @@ export default function TeacherManageExamScreen() {
     if (!file || !examId) return;
 
     const lower = file.name.toLowerCase();
-    if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls') && !lower.endsWith('.json')) {
-      setError('กรุณาเลือกไฟล์ .xlsx, .xls หรือ .json เท่านั้น');
+    if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls') && !lower.endsWith('.json') && !lower.endsWith('.csv')) {
+      setError('กรุณาเลือกไฟล์ .csv, .xlsx, .xls หรือ .json เท่านั้น');
       return;
     }
 
@@ -411,8 +411,52 @@ export default function TeacherManageExamScreen() {
           {examFormat === 'IMPORT_FILE' ? (
             <View style={{ marginBottom: 16 }}>
               <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text, marginBottom: 8 }}>
-                ไฟล์คลังข้อสอบ (.xlsx, .json)
+                ไฟล์คลังข้อสอบ (.csv, .xlsx, .json)
               </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.open('/sample-exam.csv', '_blank');
+                    }
+                  }}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
+                  })}
+                >
+                  <Ionicons name="download-outline" size={16} color={colors.primary} />
+                  <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.primary }}>ดาวน์โหลดเทมเพลต CSV</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.open('/sample-exam.json', '_blank');
+                    }
+                  }}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: pressed ? colors.backgroundSoft : colors.surface,
+                  })}
+                >
+                  <Ionicons name="document-outline" size={16} color={colors.text} />
+                  <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.text }}>ตัวอย่าง JSON</Text>
+                </Pressable>
+              </View>
               {Platform.OS === 'web'
                 ? createElement('input', {
                     ref: fileInputRef,

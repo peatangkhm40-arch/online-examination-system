@@ -241,6 +241,18 @@ router.post(
           });
           return;
         }
+        if (error.message === 'GRADE_MISMATCH') {
+          res.status(403).json({
+            error: 'ระดับชั้นของคุณไม่ตรงกับห้องนี้ จึงเข้าไม่ได้ กรุณาใช้รหัสห้องของชั้นที่ตรงกับตอนสมัคร',
+          });
+          return;
+        }
+        if (error.message === 'JOIN_CLASSROOM_FIRST') {
+          res.status(403).json({
+            error: 'กรุณาเข้าห้องเรียนด้วยรหัสจากอาจารย์ก่อน แล้วค่อยเข้าห้องสอบ',
+          });
+          return;
+        }
         if (error.message === 'STUDENT_NUMBER_TAKEN') {
           res.status(409).json({
             error: 'เลขที่ของคุณซ้ำกับนักเรียนในห้องนี้แล้ว ติดต่ออาจารย์เพื่อปรับเลขที่',

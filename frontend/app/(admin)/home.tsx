@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminNavbar } from '@/components/AdminNavbar';
@@ -49,6 +49,10 @@ export default function AdminHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [studentFilter, setStudentFilter] = useState<'all' | 'pending' | 'verified'>('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const [teachers, setTeachers] = useState<TeacherAccount[]>([]);
   const [students, setStudents] = useState<AdminStudentAccount[]>([]);
@@ -300,6 +304,39 @@ export default function AdminHomeScreen() {
     });
   };
 
+  const pendingStudents = students.filter((s) => !s.isCollegeVerified && s.isActive);
+  const pendingCount = pendingStudents.length;
+
+  const filteredStudents = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return students.filter((s) => {
+      if (studentFilter === 'pending' && s.isCollegeVerified) return false;
+      if (studentFilter === 'verified' && !s.isCollegeVerified) return false;
+      if (!q) return true;
+      return (
+        s.fullName.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.gradeLevel.toLowerCase().includes(q) ||
+        String(s.studentNumber).includes(q) ||
+        (s.classroomName ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [students, searchQuery, studentFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages);
+  const pagedStudents = filteredStudents.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE);
+
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(''), 4000);
+    return () => clearTimeout(t);
+  }, [success]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, studentFilter, tab]);
+
   if (!user) return null;
 
   return (
@@ -308,9 +345,39 @@ export default function AdminHomeScreen() {
         <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.text, marginTop: 4 }}>
           จัดการระบบทั้งหมด
         </Text>
-        <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, marginTop: 4, marginBottom: 20 }}>
-          สร้าง/แก้ไข/ระงับ/ลบ บัญชีอาจารย์ นักเรียน ห้องสอบ และห้องเรียน
+        <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, marginTop: 4, marginBottom: 16 }}>
+          ค้นหา ยืนยัน แก้ไข ระงับ และลบข้อมูลได้ครบ — แยกหมวดหมู่ชัดเจนพร้อมแบ่งหน้า
         </Text>
+
+        {pendingCount > 0 ? (
+          <Pressable
+            onPress={() => {
+              setTab('students');
+              setStudentFilter('pending');
+            }}
+            style={{
+              marginBottom: 16,
+              backgroundColor: '#fff7ed',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#fed7aa',
+              padding: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <Ionicons name="notifications" size={22} color="#c2410c" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: '#c2410c' }}>
+                งานค้าง: รอยืนยันนักเรียน {pendingCount} คน
+              </Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                กดเพื่อไปยังรายการรอตรวจสอบ — แจ้งเตือนนี้จะหายเมื่อยืนยันครบแล้ว
+              </Text>
+            </View>
+          </Pressable>
+        ) : null}
 
         <View
           style={{
@@ -325,6 +392,7 @@ export default function AdminHomeScreen() {
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, flex: 1, minWidth: 0, alignItems: 'center' }}>
             {TABS.map((item) => {
               const active = tab === item.key;
+              const badge = item.key === 'students' && pendingCount > 0 ? pendingCount : 0;
               return (
                 <Pressable
                   key={item.key}
@@ -346,6 +414,13 @@ export default function AdminHomeScreen() {
                   <Text style={{ fontFamily: fonts.semibold, fontSize: 13, color: active ? '#fff' : colors.text }}>
                     {item.label}
                   </Text>
+                  {badge > 0 ? (
+                    <View style={{ backgroundColor: active ? '#fff' : colors.danger, borderRadius: 999, minWidth: 20, paddingHorizontal: 6, paddingVertical: 2 }}>
+                      <Text style={{ fontFamily: fonts.semibold, fontSize: 11, color: active ? colors.danger : '#fff', textAlign: 'center' }}>
+                        {badge}
+                      </Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -514,30 +589,64 @@ export default function AdminHomeScreen() {
 
         {!loading && tab === 'students' ? (
           <>
-            <View
-              style={{
-                backgroundColor: '#eff6ff',
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: '#bfdbfe',
-                padding: 14,
-                marginBottom: 16,
-              }}
-            >
-              <Text style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.text }}>
-                วิธีตรวจว่าเป็นนักเรียนวิทยาลัยจริง
-              </Text>
-              <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 6 }}>
-                1) ดูชื่อ–นามสกุล ระดับชั้น เลขที่ ให้ตรงกับทะเบียนวิทยาลัย{'\n'}
-                2) ตรวจอีเมลว่าเป็นอีเมลจริงที่ติดต่อได้{'\n'}
-                3) กด「ยืนยันว่าเป็น นศ.วิทยาลัย」— หลังยืนยันแล้วถึงจะเข้าห้องเรียน/เข้าสอบได้{'\n'}
-                * ถ้าสมัครด้วยอีเมล @college.ac.th ระบบยืนยันให้อัตโนมัติ
-              </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+              {(
+                [
+                  { key: 'all' as const, label: `ทั้งหมด (${students.length})` },
+                  { key: 'pending' as const, label: `รอตรวจสอบ (${pendingCount})` },
+                  { key: 'verified' as const, label: 'ยืนยันแล้ว' },
+                ] as const
+              ).map((f) => (
+                <Pressable
+                  key={f.key}
+                  onPress={() => setStudentFilter(f.key)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: studentFilter === f.key ? colors.primary : colors.border,
+                    backgroundColor: studentFilter === f.key ? colors.backgroundSoft : colors.surface,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.medium,
+                      fontSize: 13,
+                      color: studentFilter === f.key ? colors.primary : colors.textMuted,
+                    }}
+                  >
+                    {f.label}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
-          {students.length === 0 ? (
-            <Text style={{ fontFamily: fonts.regular, color: colors.textMuted }}>ยังไม่มีนักเรียน</Text>
+
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="ค้นหาชื่อ อีเมล ชั้น เลขที่ หรือห้องเรียน..."
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                marginBottom: 12,
+                fontFamily: fonts.regular,
+                backgroundColor: colors.inputBg,
+                outlineStyle: 'none',
+              }}
+            />
+
+            <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
+              แสดง {pagedStudents.length} จาก {filteredStudents.length} คน · หน้า {pageSafe}/{totalPages}
+            </Text>
+
+          {filteredStudents.length === 0 ? (
+            <Text style={{ fontFamily: fonts.regular, color: colors.textMuted }}>ไม่พบนักเรียนตามเงื่อนไข</Text>
           ) : (
-            students.map((student) => (
+            pagedStudents.map((student) => (
               <View
                 key={student.id}
                 style={{
@@ -634,6 +743,28 @@ export default function AdminHomeScreen() {
               </View>
             ))
           )}
+
+          {totalPages > 1 ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8, marginBottom: 16 }}>
+              <Pressable
+                onPress={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={pageSafe <= 1}
+                style={{ opacity: pageSafe <= 1 ? 0.4 : 1, padding: 10 }}
+              >
+                <Text style={{ fontFamily: fonts.semibold, color: colors.primary }}>ก่อนหน้า</Text>
+              </Pressable>
+              <Text style={{ fontFamily: fonts.medium, color: colors.text }}>
+                {pageSafe} / {totalPages}
+              </Text>
+              <Pressable
+                onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={pageSafe >= totalPages}
+                style={{ opacity: pageSafe >= totalPages ? 0.4 : 1, padding: 10 }}
+              >
+                <Text style={{ fontFamily: fonts.semibold, color: colors.primary }}>ถัดไป</Text>
+              </Pressable>
+            </View>
+          ) : null}
           </>
         ) : null}
 

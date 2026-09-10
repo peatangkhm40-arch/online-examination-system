@@ -421,6 +421,24 @@ function parseVerticalPage(matrix: unknown[][]): ImportQuestion | null {
   );
 }
 
+async function parseCsvQuestions(text: string): Promise<ImportQuestion[]> {
+  const XLSX = await import('xlsx');
+  const workbook = XLSX.read(text, { type: 'string' });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  if (!sheet) throw new Error('IMPORT_INVALID:ไฟล์ CSV ว่างเปล่า');
+  const objectRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+  const byHeader = parseByHeaders(objectRows);
+  if (byHeader.length > 0) return byHeader.map((q, i) => validateQuestion(q, i));
+
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+  const byPosition = parseByPosition(matrix);
+  if (byPosition.length > 0) return byPosition.map((q, i) => validateQuestion(q, i));
+
+  throw new Error(
+    'IMPORT_INVALID:อ่าน CSV ไม่สำเร็จ — ใช้หัวตาราง question,a,b,c,d,correct หรือดาวน์โหลดเทมเพลต'
+  );
+}
+
 async function parseSpreadsheetQuestions(buffer: Buffer): Promise<ImportQuestion[]> {
   const XLSX = await import('xlsx');
   const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -477,10 +495,12 @@ export async function parseExamImportFile(fileName: string, contentBase64: strin
   let questions: ImportQuestion[];
   if (safeName.endsWith('.json')) {
     questions = parseJsonQuestions(buffer.toString('utf8'));
+  } else if (safeName.endsWith('.csv')) {
+    questions = await parseCsvQuestions(buffer.toString('utf8'));
   } else if (safeName.endsWith('.xlsx') || safeName.endsWith('.xls')) {
     questions = await parseSpreadsheetQuestions(buffer);
   } else {
-    throw new Error('IMPORT_INVALID:รองรับเฉพาะไฟล์ .json, .xlsx, .xls');
+    throw new Error('IMPORT_INVALID:รองรับเฉพาะไฟล์ .csv, .json, .xlsx, .xls');
   }
 
   if (questions.length === 0) {

@@ -1,6 +1,7 @@
 import { AttemptStatus, CheatEventType, Prisma, RoomStatus } from '@prisma/client';
 import { config } from '../config';
 import { prisma } from '../db/prisma';
+import { sendLineNotify } from './lineNotify';
 
 const EXAM_DURATION_MINUTES = 30;
 
@@ -228,6 +229,38 @@ export async function recordCheatEvent(
       isNotified: false,
     },
   });
+
+  // แจ้งเตือน LINE (ไม่บล็อก flow หลัก)
+  void (async () => {
+    try {
+      const room = await prisma.examRoom.findUnique({
+        where: { id: attempt.examRoomId },
+        select: {
+          subjectName: true,
+          classCode: true,
+          teacher: { select: { lineNotifyToken: true, fullName: true } },
+        },
+      });
+      const student = await prisma.student.findUnique({
+        where: { id: studentId },
+        select: { firstName: true, lastName: true, gradeLevel: true, studentNumber: true },
+      });
+      if (!room || !student) return;
+      const msg = [
+        '\n[ExamGuard] แจ้งเตือนการทุจริต',
+        `นักเรียน: ${student.firstName} ${student.lastName}`,
+        `ชั้น: ${student.gradeLevel} เลขที่ ${student.studentNumber}`,
+        `วิชา: ${room.subjectName} (${room.classCode})`,
+        `เหตุการณ์: ${descriptions[eventType] ?? eventType}`,
+      ].join('\n');
+      const result = await sendLineNotify(msg, room.teacher.lineNotifyToken);
+      if (result.ok) {
+        await prisma.cheatLog.update({ where: { id: log.id }, data: { isNotified: true } });
+      }
+    } catch (e) {
+      console.warn('[cheat LINE notify]', e);
+    }
+  })();
 
   const cheatFlags = await prisma.cheatLog.count({
     where: { studentId, examRoomId: attempt.examRoomId },

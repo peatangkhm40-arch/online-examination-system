@@ -92,6 +92,9 @@ export interface TeacherClassroom {
   name: string;
   joinCode: string;
   studentCount: number;
+  gradeLevel?: string;
+  subjectId?: string | null;
+  subjectName?: string | null;
   createdAt?: string;
 }
 
