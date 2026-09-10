@@ -21,8 +21,7 @@ export default function TeacherManageClassroomScreen() {
 
   const [classrooms, setClassrooms] = useState<TeacherClassroom[]>([]);
   const [subjects, setSubjects] = useState<TeacherSubject[]>([]);
-  const [subjectId, setSubjectId] = useState('');
-  const [newSubjectName, setNewSubjectName] = useState('');
+  const [subjectName, setSubjectName] = useState('');
   const [gradeLevel, setGradeLevel] = useState('');
   const [useRandomCode, setUseRandomCode] = useState(true);
   const [joinCode, setJoinCode] = useState(randomJoinCode());
@@ -65,12 +64,12 @@ export default function TeacherManageClassroomScreen() {
   const handleCreate = async () => {
     setError('');
     setSuccess('');
-    const subjectName = newSubjectName.trim();
-    const useNewSubject = !subjectId || subjectId === '__new__';
-    if (useNewSubject && subjectName.length < 1) {
-      setError('กรุณาเลือกหรือระบุประเภทวิชาของห้องเรียน');
+    const typedSubject = subjectName.trim();
+    if (!typedSubject) {
+      setError('กรุณาพิมพ์หรือเลือกประเภทวิชาของห้องเรียน');
       return;
     }
+    const matchedSubject = subjects.find((s) => s.name.trim().toLowerCase() === typedSubject.toLowerCase());
     if (!gradeLevel) {
       setError('กรุณาเลือกว่าห้องนี้อยู่ชั้นไหน / ห้องไหน');
       return;
@@ -82,14 +81,13 @@ export default function TeacherManageClassroomScreen() {
     setSubmitting(true);
     try {
       const { classroom } = await api.addClassroom({
-        subjectId: useNewSubject ? undefined : subjectId,
-        subjectName: useNewSubject ? subjectName : undefined,
+        subjectId: matchedSubject?.id,
+        subjectName: matchedSubject ? undefined : typedSubject,
         gradeLevel,
         joinCode: useRandomCode ? undefined : joinCode.trim().toUpperCase(),
         useRandomCode,
       });
-      setSubjectId('');
-      setNewSubjectName('');
+      setSubjectName('');
       setGradeLevel('');
       setJoinCode(randomJoinCode());
       setUseRandomCode(true);
@@ -133,10 +131,10 @@ export default function TeacherManageClassroomScreen() {
 
   if (!user) return null;
 
-  const subjectOptions = [
-    ...subjects.map((s) => ({ label: s.name, value: s.id })),
-    { label: '+ เพิ่มวิชาใหม่', value: '__new__' },
-  ];
+  const subjectQuery = subjectName.trim().toLowerCase();
+  const subjectSuggestions = subjectQuery
+    ? subjects.filter((s) => s.name.toLowerCase().includes(subjectQuery) && s.name.toLowerCase() !== subjectQuery)
+    : subjects;
 
   return (
     <TeacherNavbar user={user} onLogout={handleLogout} title="จัดการห้องเรียน" maxContentWidth={900}>
@@ -149,43 +147,52 @@ export default function TeacherManageClassroomScreen() {
       <View style={{ backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 24 }}>
         <Text style={{ fontFamily: fonts.semibold, fontSize: 16, color: colors.text, marginBottom: 8 }}>สร้างห้องเรียนใหม่</Text>
         <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginBottom: 14 }}>
-          ขั้นตอน: 1) เลือกวิชา 2) เลือกระดับชั้น/ห้อง 3) แจกรหัสให้นักเรียน
+          ขั้นตอน: 1) พิมพ์หรือเลือกวิชา 2) เลือกระดับชั้น/ห้อง 3) แจกรหัสให้นักเรียน
         </Text>
 
         {error ? <Text style={{ color: colors.danger, fontFamily: fonts.regular, marginBottom: 12 }}>{error}</Text> : null}
         {success ? <Text style={{ color: colors.success, fontFamily: fonts.regular, marginBottom: 12 }}>{success}</Text> : null}
 
-        <SelectField
-          label="ประเภทวิชา *"
-          value={subjectId === '__new__' ? '__new__' : subjectId}
-          options={subjectOptions.length ? subjectOptions : [{ label: '+ เพิ่มวิชาใหม่', value: '__new__' }]}
-          onChange={(v) => {
-            setSubjectId(v);
-            if (v !== '__new__') setNewSubjectName('');
+        <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text, marginBottom: 8 }}>ประเภทวิชา *</Text>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 10,
+            padding: 12,
+            fontFamily: fonts.regular,
+            backgroundColor: colors.inputBg,
+            color: colors.text,
+            outlineStyle: 'none',
           }}
-          placeholder="เลือกวิชา"
+          placeholder="พิมพ์ชื่อวิชา เช่น คณิตศาสตร์, ภาษาอังกฤษ"
+          placeholderTextColor={colors.textMuted}
+          value={subjectName}
+          onChangeText={setSubjectName}
         />
-
-        {subjectId === '__new__' || (!subjectId && subjects.length === 0) ? (
-          <>
-            <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: colors.text, marginBottom: 8 }}>ชื่อวิชาใหม่ *</Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 16,
-                fontFamily: fonts.regular,
-                backgroundColor: colors.inputBg,
-                outlineStyle: 'none',
-              }}
-              placeholder="เช่น คณิตศาสตร์, ภาษาอังกฤษ"
-              value={newSubjectName}
-              onChangeText={setNewSubjectName}
-            />
-          </>
+        {subjectSuggestions.length ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+            {subjectSuggestions.map((subject) => (
+              <Pressable
+                key={subject.id}
+                onPress={() => setSubjectName(subject.name)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.backgroundSoft,
+                }}
+              >
+                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: colors.primary }}>{subject.name}</Text>
+              </Pressable>
+            ))}
+          </View>
         ) : null}
+        <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: 8, marginBottom: 16 }}>
+          พิมพ์ชื่อใหม่ได้เลย ระบบจะสร้างวิชาให้อัตโนมัติ หรือแตะชื่อวิชาที่เคยสร้างไว้เพื่อใช้ซ้ำ
+        </Text>
 
         <SelectField
           label="ระดับชั้น / ห้อง *"
